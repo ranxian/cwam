@@ -27,10 +27,9 @@ int comparator(tok_stream_t *toks, syn_node_t *tree);
 int structure(tok_stream_t *toks, syn_node_t *tree);
 int variable(tok_stream_t *toks, syn_node_t *tree);
 
-int tok_stream_init(tok_stream_t *toks, const char *string);
-int init_toks_from_string(tok_stream_t *toks, const char *string);
+int toks_init_from_string(tok_stream_t *toks, const char *string);
 int token(tok_stream_t *toks, const char *token);
-int add_token(tok_stream_t *toks, const char *token, int len);
+int toks_add_token(tok_stream_t *toks, const char *token, int len);
 void toks_info(tok_stream_t *toks);
 int toks_destroy(tok_stream_t *toks);
 #endif

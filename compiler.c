@@ -6,6 +6,15 @@
 #define SEQL(s1, s2) (strcmp((s1), (s2)) == 0)
 #define is_comp(s) (SEQL((s), ">") || SEQL((s), "<") || SEQL((s), ">=") || SEQL((s), "<=") || \
 					SEQL((s), "!=") || SEQL((s), "=="))
+#define PUSH_PARSE(tree, toks) (\
+	int _old_idx = (toks)->idx; \
+	(tree)->left = malloc(sizeof(syn_node_t)); \
+	(tree)->right = malloc(sizeof(syn_node_t));)
+#define POP_PARSE(tree, toks) (\
+	free((tree)->right); \
+	free((tree)->left); \
+	(toks)->idx = _old_idx;)
+
 /* test if s is a constant */
 int is_constant(const char *s)
 {
@@ -65,18 +74,170 @@ int is_predicate(const char *s)
 	return is_constant(s) && !is_num(s) && !(s[0] == '_' && s[1] == 0);
 }
 
-int predicate(tok_stream_t *toks, syn_node_t *tree);
-int constant(tok_stream_t *toks, syn_node_t *tree);
-int program(tok_stream_t *toks, syn_node_t *tree);
-int clause(tok_stream_t *toks, syn_node_t *tree);
-int head(tok_stream_t *toks, syn_node_t *tree);
-int body(tok_stream_t *toks, syn_node_t *tree);
-int list(tok_stream_t *toks, syn_node_t *tree);
-int condition(tok_stream_t *toks, syn_node_t *tree);
-int expression(tok_stream_t *toks, syn_node_t *tree);
-int comparator(tok_stream_t *toks, syn_node_t *tree);
-int structure(tok_stream_t *toks, syn_node_t *tree);
-int variable(tok_stream_t *toks, syn_node_t *tree);
+int program(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	if (clause(toks, tree->left)) {
+		if (program(toks, tree->right))
+			return 1;
+		free(tree->right);
+		tree->right = NULL;
+		return 1;
+	}
+
+	free(tree->right);
+	free(tree->left);
+	tree->right = tree->left = NULL;
+	toks->idx = old_idx;
+}
+int predicate(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
+int constant(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
+int clause(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_CLAUSE;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	if (head(toks, tree->left)) {
+		if (token(toks, ".")) {
+			free(tree->right);
+			tree->right = NULL;
+			return 1;
+		} else if (token(toks, ":") && token(toks, "-") && body(toks, tree->right)) {
+			return 1;
+		}
+	}
+
+	free(tree->right);
+	free(tree->left);
+	tree->right = tree->left = NULL;
+	toks->idx = old_idx;
+}
+int head(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_HEAD;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	if (predicate(toks, tree->left)) {
+		int old_idx2 = toks->idx;
+		if (token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
+			return 1;
+		}
+		toks->idx = old_idx2;
+		free(tree->right);
+		tree->right = NULL;
+		return 1;
+	}
+
+	free(tree->right);
+	free(tree->left);
+	tree->right = tree->left = NULL;
+	toks->idx = old_idx;
+}
+int body(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
+int list(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
+int condition(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
+int expression(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
+int comparator(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
+int structure(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
+int variable(tok_stream_t *toks, syn_node_t *tree)
+{
+	tree->type = S_PROGRAM;
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+
+	free(tree->right);
+	free(tree->left);
+	toks->idx = old_idx;
+}
 
 int token(tok_stream_t *toks, const char *token)
 {
@@ -87,7 +248,7 @@ int token(tok_stream_t *toks, const char *token)
 		return 1;
 	}
 }
-int add_token(tok_stream_t *toks, const char *token, int len)
+int toks_add_token(tok_stream_t *toks, const char *token, int len)
 {
 	toks->tokens[toks->len] = malloc(len + 1);
 	strncpy(toks->tokens[toks->len], token, len);
@@ -95,7 +256,7 @@ int add_token(tok_stream_t *toks, const char *token, int len)
 	toks->len += 1;
 }
 
-int init_toks_from_string(tok_stream_t *toks, const char *string)
+int toks_init_from_string(tok_stream_t *toks, const char *string)
 {
 	toks->idx = 0;
 	toks->len = 0;
@@ -128,21 +289,21 @@ int init_toks_from_string(tok_stream_t *toks, const char *string)
 			    c == '+' || c == '-' || c == '*' || c == '/')
 			{
 				if (tlen > 0)
-					add_token(toks, temp, tlen);
+					toks_add_token(toks, temp, tlen);
 				temp[0] = c;
-				add_token(toks, temp, 1);
+				toks_add_token(toks, temp, 1);
 				tlen = 0;
 			} else {
 				temp[tlen++] = c;
 			}
 		} else {
 			if (tlen > 0)
-				add_token(toks, temp, tlen);
+				toks_add_token(toks, temp, tlen);
 			tlen = 0;
 		}
 	}
 	if (tlen > 0)
-		add_token(toks, temp, tlen);
+		toks_add_token(toks, temp, tlen);
 	tlen = 0;
 
 	return 1;
