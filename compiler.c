@@ -84,6 +84,8 @@ int is_predicate(const char *s)
 
 int program(tok_stream_t *toks, syn_node_t *tree)
 {
+	printf("test program: %s\n", CUR_TOK(toks));
+	if (toks->idx >= toks->len) return 0;
 	tree->type = S_PROGRAM;
 	int old_idx = push_stat(toks, tree);
 
@@ -101,18 +103,25 @@ int program(tok_stream_t *toks, syn_node_t *tree)
 }
 int predicate(tok_stream_t *toks, syn_node_t *tree)
 {
+	printf("test predicate: %s\n", CUR_TOK(toks));
 	if (is_predicate(CUR_TOK(toks))) {
 		tree->type = S_PREDICATE;
+		tree->left = tree->right = NULL;
 		strcpy(tree->value, CUR_TOK(toks));
+		printf("%s\n", tree->value);
 		toks->idx += 1;
+		printf("0x%x; 0x%x\n", (int)tree->left, (int)tree->right);
+		syn_node_traverse(tree);
 		return 1;
 	}
 	return 0;
 }
 int constant(tok_stream_t *toks, syn_node_t *tree)
 {
+	printf("test constant: %s\n", CUR_TOK(toks));
 	if (is_constant(CUR_TOK(toks))) {
 		tree->type = S_CONSTANT;
+		tree->left = tree->right = NULL;
 		strcpy(tree->value, CUR_TOK(toks));
 		toks->idx += 1;
 		return 1;
@@ -129,6 +138,7 @@ int constant(tok_stream_t *toks, syn_node_t *tree)
 }
 int clause(tok_stream_t *toks, syn_node_t *tree)
 {
+	printf("test clause: %s\n", CUR_TOK(toks));
 	tree->type = S_CLAUSE;
 	int old_idx = push_stat(toks, tree);
 
@@ -149,6 +159,7 @@ int clause(tok_stream_t *toks, syn_node_t *tree)
 }
 int head(tok_stream_t *toks, syn_node_t *tree)
 {
+	printf("test head:%s\n", CUR_TOK(toks));
 	tree->type = S_HEAD;
 	int old_idx = push_stat(toks, tree);
 
@@ -167,15 +178,16 @@ int head(tok_stream_t *toks, syn_node_t *tree)
 }
 int body(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
+	tree->type = S_BODY;
 	int old_idx = push_stat(toks, tree);
-
+	printf("test body: %s\n", CUR_TOK(toks));
 	if (condition(toks, tree->left)) {
 		if (is_token(toks, ",")) {
 			if (token(toks, ",") && body(toks, tree->right))
 				return 1;
 		} else {
 			free(tree->right), tree->right = NULL;
+			syn_node_traverse(tree);
 			return 1;
 		}
 	}
@@ -185,7 +197,8 @@ int body(tok_stream_t *toks, syn_node_t *tree)
 }
 int list(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
+	printf("test list: %s\n", CUR_TOK(toks));
+	tree->type = S_LIST;
 	int old_idx = push_stat(toks, tree);
 
 	if (element(toks, tree->left)) {
@@ -208,13 +221,17 @@ int list(tok_stream_t *toks, syn_node_t *tree)
 }
 int condition(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
+	tree->type = S_CONDITION;
 	int old_idx = push_stat(toks, tree);
 
 	if (predicate(toks, tree->left)) {
 		if (is_token(toks, "(")) {
-			if (token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
+			if (token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
+				printf("long condition passed\n");
+				printf("%d\n", tree->right->type);
+				syn_node_traverse(tree->left);
 				return 1;
+			}
 		} else {
 			free(tree->right), tree->right = NULL;
 			return 1;
@@ -237,7 +254,8 @@ int comparator(tok_stream_t *toks, syn_node_t *tree)
 
 int element(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
+	printf("test element: %s\n", CUR_TOK(toks));
+	tree->type = S_ELEM;
 	int old_idx = toks->idx;
 
 	if (structure(toks, tree))
@@ -255,7 +273,8 @@ int element(tok_stream_t *toks, syn_node_t *tree)
 }
 int structure(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
+	printf("test structure: %s\n", CUR_TOK(toks));
+	tree->type = S_STRUCT;
 	int old_idx = push_stat(toks, tree);
 
 	if (predicate(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
@@ -268,10 +287,13 @@ int structure(tok_stream_t *toks, syn_node_t *tree)
 
 	return 0;
 }
+
 int variable(tok_stream_t *toks, syn_node_t *tree)
 {
+	printf("test variable: %s\n", CUR_TOK(toks));
 	if (is_variable(CUR_TOK(toks))) {
 		tree->type = S_VARIABLE;
+		tree->left = tree->right = NULL;
 		strcpy(tree->value, CUR_TOK(toks));
 		toks->idx += 1;
 		return 1;
