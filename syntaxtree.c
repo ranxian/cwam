@@ -38,7 +38,7 @@ void print_node(syn_node_t *node, int indent)
 			printf("UNKNOWN NODE\n");
 	}
 	print_node(node->left, indent + 2);
-	print_node(node->right, indent + 2);
+	print_node(node->right, indent);
 }
 
 void syn_node_traverse(syn_node_t *node)
