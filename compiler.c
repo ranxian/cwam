@@ -26,7 +26,8 @@ int is_num(const char *s)
 {
 	int point = 0;
 	int len = strlen(s);
-	for (int i = 0; i < len; i++) {
+	int i;
+	for (i = 0; i < len; i++) {
 		char c = s[i];
 		if (c == '.') {
 			if (!point) point = 1;
@@ -42,12 +43,13 @@ int is_num(const char *s)
 /* test if s is a variable */
 int is_variable(const char *s)
 {
+	int i;
 	if (s[0] == '_' && s[1] == 0)
 		return 1;
 
 	if (s[0] >= 'A' && s[0] <= 'Z') {
 		int len = strlen(s);
-		for (int i = 1; i < len; i++) {
+		for (i = 1; i < len; i++) {
 			if (!is_anum(s[i])) return 0;
 		}
 		return 1;
