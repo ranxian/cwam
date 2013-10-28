@@ -78,8 +78,15 @@ int comparator(tok_stream_t *toks, syn_node_t *tree);
 int structure(tok_stream_t *toks, syn_node_t *tree);
 int variable(tok_stream_t *toks, syn_node_t *tree);
 
-int tok_stream_init(tok_stream_t *toks, const char *string);
-int token(tok_stream_t *toks, const char *token);
+int token(tok_stream_t *toks, const char *token)
+{
+	if (strcmp(toks->tokens[toks->idx], token)) {
+		return -1;
+	} else {
+		toks->idx += 1;
+		return 1;
+	}
+}
 int add_token(tok_stream_t *toks, const char *token, int len)
 {
 	toks->tokens[toks->len] = malloc(len + 1);
