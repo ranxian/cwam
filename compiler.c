@@ -1,58 +1,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "compiler.h"
 #define is_anum(c) (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_')
 /* test if s is a constant */
-bool is_constant(const char *s)
+int is_constant(const char *s)
 {
+	int len = strlen(s), i;
 	if (s[0] == '[' && s[1] == ']' && s[2] == 0)
-		return true;
+		return 1;
 	if (s[0] >= 'a' && s[0] <= 'z') {
-		int len = strlen(s);
-		for (int i = 1; i < len; i++) {
-			if (!is_anum(s[i])) return false;
+		for (i = 1; i < len; i++) {
+			if (!is_anum(s[i])) return 0;
 		}
-		return true;
+		return 1;
 	}
 	if (s[0] == '\'' && s[len-1] == '\'')
-		return true;
+		return 1;
 	if (is_num(s))
-		return true;
+		return 1;
+	return 0;
 }
 /* test if s is a number */
-bool is_num(const char *s)
+int is_num(const char *s)
 {
-	bool point = 0;
+	int point = 0;
 	int len = strlen(s);
 	for (int i = 0; i < len; i++) {
 		char c = s[i];
 		if (c == '.') {
-			if (!point) point = true;
-			else return false;
+			if (!point) point = 1;
+			else return 0;
 		} else if (c >= '0' && c <= '9') {
 			;
 		} else {
-			return false;
+			return 0;
 		}
 	}
+	return 1;
 }
 /* test if s is a variable */
-bool is_variable(const char *s)
+int is_variable(const char *s)
 {
-	if (s[0] == '_' && s[1] == 0) 
-		return true;
+	if (s[0] == '_' && s[1] == 0)
+		return 1;
 
 	if (s[0] >= 'A' && s[0] <= 'Z') {
 		int len = strlen(s);
 		for (int i = 1; i < len; i++) {
-			if (!is_anum(s[i])) return false;
+			if (!is_anum(s[i])) return 0;
 		}
-		return true;
+		return 1;
 	}
-	return false;
+	return 0;
 }
 /* test if s is a predicate */
-bool is_predicate(const char *s)
+int is_predicate(const char *s)
 {
 	return is_constant(s) && !is_num(s) && !(s[0] == '_' && s[1] == 0);
 }
