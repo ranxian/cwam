@@ -6,22 +6,31 @@
 #define SEQL(s1, s2) (strcmp((s1), (s2)) == 0)
 #define is_comp(s) (SEQL((s), ">") || SEQL((s), "<") || SEQL((s), ">=") || SEQL((s), "<=") || \
 					SEQL((s), "!=") || SEQL((s), "=="))
-#define PUSH_PARSE(tree, toks) (\
-	int _old_idx = (toks)->idx; \
-	(tree)->left = malloc(sizeof(syn_node_t)); \
-	(tree)->right = malloc(sizeof(syn_node_t));)
-#define POP_PARSE(tree, toks) (\
-	free((tree)->right); \
-	free((tree)->left); \
-	(toks)->idx = _old_idx;)
+#define CUR_TOK(toks) ((toks)->tokens[(toks)->idx])
+int inline push_stat(tok_stream_t *toks, syn_node_t *tree)
+{
+	int old_idx = toks->idx;
+	tree->left = malloc(sizeof(syn_node_t));
+	tree->right = malloc(sizeof(syn_node_t));
+	return old_idx;
+}
+int inline pop_stat(tok_stream_t *toks, syn_node_t *tree, int old_idx)
+{
+	free(tree->right);
+	free(tree->left);
+	tree->right = tree->left = NULL;
+	toks->idx = old_idx;
 
+	return 0;
+}
 /* test if s is a constant */
 int is_constant(const char *s)
 {
-	int len = strlen(s), i;
+	int len = strlen(s);
 	if (s[0] == '[' && s[1] == ']' && s[2] == 0)
 		return 1;
 	if (s[0] >= 'a' && s[0] <= 'z') {
+		int i;
 		for (i = 1; i < len; i++) {
 			if (!is_anum(s[i])) return 0;
 		}
@@ -55,12 +64,11 @@ int is_num(const char *s)
 /* test if s is a variable */
 int is_variable(const char *s)
 {
-	int i;
 	if (s[0] == '_' && s[1] == 0)
 		return 1;
 
 	if (s[0] >= 'A' && s[0] <= 'Z') {
-		int len = strlen(s);
+		int len = strlen(s), i;
 		for (i = 1; i < len; i++) {
 			if (!is_anum(s[i])) return 0;
 		}
@@ -77,9 +85,7 @@ int is_predicate(const char *s)
 int program(tok_stream_t *toks, syn_node_t *tree)
 {
 	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
+	int old_idx = push_stat(toks, tree);
 
 	if (clause(toks, tree->left)) {
 		if (program(toks, tree->right))
@@ -89,171 +95,207 @@ int program(tok_stream_t *toks, syn_node_t *tree)
 		return 1;
 	}
 
-	free(tree->right);
-	free(tree->left);
-	tree->right = tree->left = NULL;
-	toks->idx = old_idx;
+	pop_stat(toks, tree, old_idx);
+
+	return 0;
 }
 int predicate(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
-
-	free(tree->right);
-	free(tree->left);
-	toks->idx = old_idx;
+	if (is_predicate(CUR_TOK(toks))) {
+		tree->type = S_PREDICATE;
+		strcpy(tree->value, CUR_TOK(toks));
+		toks->idx += 1;
+		return 1;
+	}
+	return 0;
 }
 int constant(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
+	if (is_constant(CUR_TOK(toks))) {
+		tree->type = S_CONSTANT;
+		strcpy(tree->value, CUR_TOK(toks));
+		toks->idx += 1;
+		return 1;
+	}
 
-	free(tree->right);
-	free(tree->left);
+	int old_idx = toks->idx;
+	if (token(toks, "[") && token(toks, "]")) {
+		tree->type = S_CONSTANT;
+		strcpy(tree->value, "[]");
+		return 1;
+	}
 	toks->idx = old_idx;
+	return 0;
 }
 int clause(tok_stream_t *toks, syn_node_t *tree)
 {
 	tree->type = S_CLAUSE;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
+	int old_idx = push_stat(toks, tree);
 
 	if (head(toks, tree->left)) {
-		if (token(toks, ".")) {
-			free(tree->right);
-			tree->right = NULL;
+		if (is_token(toks, ".")) {
+			token(toks, ".");
+			free(tree->right), tree->right = NULL;
 			return 1;
-		} else if (token(toks, ":") && token(toks, "-") && body(toks, tree->right)) {
-			return 1;
+		} else if (is_token(toks, ":")) {
+			if (token(toks, ":") && token(toks, "-") && body(toks, tree->right) && token(toks, "."))
+				return 1;
 		}
 	}
 
-	free(tree->right);
-	free(tree->left);
-	tree->right = tree->left = NULL;
-	toks->idx = old_idx;
+	pop_stat(toks, tree, old_idx);
+
+	return 0;
 }
 int head(tok_stream_t *toks, syn_node_t *tree)
 {
 	tree->type = S_HEAD;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
+	int old_idx = push_stat(toks, tree);
 
 	if (predicate(toks, tree->left)) {
-		int old_idx2 = toks->idx;
-		if (token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
+		if (is_token(toks, "(")) {
+			if (token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
+				return 1;
+		} else {
+			free(tree->right), tree->right = NULL;
 			return 1;
 		}
-		toks->idx = old_idx2;
-		free(tree->right);
-		tree->right = NULL;
-		return 1;
 	}
 
-	free(tree->right);
-	free(tree->left);
-	tree->right = tree->left = NULL;
-	toks->idx = old_idx;
+	pop_stat(toks, tree, old_idx);
+	return 0;
 }
 int body(tok_stream_t *toks, syn_node_t *tree)
 {
 	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
+	int old_idx = push_stat(toks, tree);
 
-	free(tree->right);
-	free(tree->left);
-	toks->idx = old_idx;
+	if (condition(toks, tree->left)) {
+		if (is_token(toks, ",")) {
+			if (token(toks, ",") && body(toks, tree->right))
+				return 1;
+		} else {
+			free(tree->right), tree->right = NULL;
+			return 1;
+		}
+	}
+
+	pop_stat(toks, tree, old_idx);
+	return 0;
 }
 int list(tok_stream_t *toks, syn_node_t *tree)
 {
 	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
+	int old_idx = push_stat(toks, tree);
 
-	free(tree->right);
-	free(tree->left);
-	toks->idx = old_idx;
+	if (element(toks, tree->left)) {
+		if (is_token(toks, "|")) {
+			token(toks, "|");
+			if (element(toks, tree->right))
+				return 1;
+		} else if (is_token(toks, ",")) {
+			token(toks, ",");
+			if (list(toks, tree->right))
+				return 1;
+		} else {
+			free(tree->right), tree->right = NULL;
+			return 1;
+		}
+	}
+
+	pop_stat(toks, tree, old_idx);
+	return 0;
 }
 int condition(tok_stream_t *toks, syn_node_t *tree)
 {
 	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
+	int old_idx = push_stat(toks, tree);
 
-	free(tree->right);
-	free(tree->left);
-	toks->idx = old_idx;
+	if (predicate(toks, tree->left)) {
+		if (is_token(toks, "(")) {
+			if (token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
+				return 1;
+		} else {
+			free(tree->right), tree->right = NULL;
+			return 1;
+		}
+	}
+
+	pop_stat(toks, tree, old_idx);
+	return 0;
 }
+// not implemented.
 int expression(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
-
-	free(tree->right);
-	free(tree->left);
-	toks->idx = old_idx;
+	return 0;
 }
+// not implemented.
 int comparator(tok_stream_t *toks, syn_node_t *tree)
+{
+	return 0;
+}
+
+int element(tok_stream_t *toks, syn_node_t *tree)
 {
 	tree->type = S_PROGRAM;
 	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
 
-	free(tree->right);
-	free(tree->left);
+	if (structure(toks, tree))
+		return 1;
+	if (variable(toks, tree))
+		return 1;
+	if (constant(toks, tree))
+		return 1;
+	if (token(toks, "[") && list(toks, tree) && token(toks, "]"))
+		return 1;
+
 	toks->idx = old_idx;
+
+	return 0;
 }
 int structure(tok_stream_t *toks, syn_node_t *tree)
 {
 	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
+	int old_idx = push_stat(toks, tree);
 
-	free(tree->right);
-	free(tree->left);
+	if (predicate(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
+		return 1;
 	toks->idx = old_idx;
+	if (variable(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
+		return 1;
+
+	pop_stat(toks, tree, old_idx);
+
+	return 0;
 }
 int variable(tok_stream_t *toks, syn_node_t *tree)
 {
-	tree->type = S_PROGRAM;
-	int old_idx = toks->idx;
-	tree->left = malloc(sizeof(syn_node_t));
-	tree->right = malloc(sizeof(syn_node_t));
-
-	free(tree->right);
-	free(tree->left);
-	toks->idx = old_idx;
+	if (is_variable(CUR_TOK(toks))) {
+		tree->type = S_VARIABLE;
+		strcpy(tree->value, CUR_TOK(toks));
+		toks->idx += 1;
+		return 1;
+	}
+	return 0;
 }
 
 int token(tok_stream_t *toks, const char *token)
 {
 	if (strcmp(toks->tokens[toks->idx], token)) {
-		return -1;
+		return 0;
 	} else {
 		toks->idx += 1;
 		return 1;
 	}
 }
+
 int toks_add_token(tok_stream_t *toks, const char *token, int len)
 {
 	toks->tokens[toks->len] = malloc(len + 1);
 	strncpy(toks->tokens[toks->len], token, len);
 	toks->tokens[toks->len][len] = 0;
 	toks->len += 1;
+	return 0;
 }
 
 int toks_init_from_string(tok_stream_t *toks, const char *string)
@@ -262,11 +304,11 @@ int toks_init_from_string(tok_stream_t *toks, const char *string)
 	toks->len = 0;
 
 	int i, len = strlen(string);
-	char c, temp[256], tlen = 0;
+	char temp[256], tlen = 0;
 
 	for (i = 0; i < len; i++)
 	{
-		c = string[i];
+		char c = string[i];
 		if (c == '\'') {
 			if (tlen != 0) {
 				printf("init token stream error!\n");
@@ -328,3 +370,7 @@ int toks_destroy(tok_stream_t *toks)
 	return 1;
 }
 
+int is_token(tok_stream_t *toks, const char *token)
+{
+	return strcmp(toks->tokens[toks->idx], token) == 0;
+}

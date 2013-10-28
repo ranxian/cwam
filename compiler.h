@@ -26,10 +26,14 @@ int expression(tok_stream_t *toks, syn_node_t *tree);
 int comparator(tok_stream_t *toks, syn_node_t *tree);
 int structure(tok_stream_t *toks, syn_node_t *tree);
 int variable(tok_stream_t *toks, syn_node_t *tree);
-
+int element(tok_stream_t *toks, syn_node_t *tree);
 int toks_init_from_string(tok_stream_t *toks, const char *string);
 int token(tok_stream_t *toks, const char *token);
+int is_token(tok_stream_t *toks, const char *token);
 int toks_add_token(tok_stream_t *toks, const char *token, int len);
 void toks_info(tok_stream_t *toks);
 int toks_destroy(tok_stream_t *toks);
+
+int push_stat(tok_stream_t *toks, syn_node_t *tree);
+int pop_stat(tok_stream_t *toks, syn_node_t *tree, int old_idx);
 #endif
