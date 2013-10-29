@@ -1,0 +1,2 @@
+son(paul, jinny). father(X, Y) :- son(Y, X).
+son(s, b).

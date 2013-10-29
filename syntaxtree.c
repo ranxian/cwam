@@ -27,11 +27,11 @@ void print_node(syn_node_t *node, int indent)
 		case S_CONDITION:
 			printf("CONDITION\n"); break;
 		case S_VARIABLE:
-		   	printf("VARIABLE:\t%s\n", node->value); break;
+		   	printf("VARIABLE:\t\t%s\n", node->value); break;
 		case S_ELEM:
 			printf("ELEMENT\n"); break;
 		case S_CONSTANT:
-			printf("CONSTANT:\t%s\n", node->value); break;
+			printf("CONSTANT:\t\t%s\n", node->value); break;
 		case S_NONE:
 			printf("NONE\n"); break;
 		default:
