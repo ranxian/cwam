@@ -5,6 +5,30 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+char *NODE_NAMES(syn_node_type_t type)
+{
+	static char *_NODE_NAMES[20] = {
+		"clause",
+		"program",
+		"head",
+		"body",
+		"predicate",
+		"list",
+		"condition",
+		"variable",
+		"expression",
+		"element",
+		"comparison",
+		"structure",
+		"constant",
+		"none",
+		"call",
+		"non_call",
+		"query"
+	};
+
+	return _NODE_NAMES[type];
+}
 
 void print_indent(int indent)
 {
@@ -32,7 +56,7 @@ void print_node(syn_node_t *node, int indent)
 		case S_CONDITION:
 			printf("CONDITION\n"); break;
 		case S_VARIABLE:
-		   	printf("VARIABLE:\t\t%s\n", node->value); break;
+			printf("VARIABLE:\t\t%s\n", node->value); break;
 		case S_ELEM:
 			printf("ELEMENT\n"); break;
 		case S_CONSTANT:

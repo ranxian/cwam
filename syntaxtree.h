@@ -17,4 +17,6 @@ syn_node_t *syn_node_init();
 
 void syn_node_destroy(syn_node_t *);
 
+char *NODE_NAMES(syn_node_type_t type);
+
 #endif

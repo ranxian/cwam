@@ -14,8 +14,10 @@ prog_t *prog_init()
 void prog_destroy(prog_t *prog)
 {
 	int i;
+
 	for (i = 0; i < prog->nstmt; i++)
 		stmt_destroy(prog->stmts[i]);
+
 	free(prog);
 }
 
@@ -31,6 +33,7 @@ static int prog_contains_label(prog_t *prog, char *label)
 
 int prog_add_node(prog_t *prog, syn_node_t *node)
 {
+	if (node == NULL) return -1;
 	prog_t *p = syn_node_to_prog(node);
 
 	int can_add = 1;
@@ -54,15 +57,13 @@ int prog_add_node(prog_t *prog, syn_node_t *node)
 		}
 	}
 
-	prog_destroy(prog);
+	prog_destroy(p);
 	return 0;
 }
 
 int prog_add_stmt(prog_t *prog, stmt_t *stmt)
 {
-	prog->stmts[prog->nstmt] = stmt;
-	prog->stmts[prog->nstmt] = malloc(sizeof(stmt_t));
-	memcpy(prog->stmts[prog->nstmt], stmt, sizeof(stmt_t));
+	prog->stmts[prog->nstmt] = stmt_copy(stmt);
 	prog->nstmt += 1;
 	return 0;
 }

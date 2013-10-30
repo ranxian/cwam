@@ -29,4 +29,6 @@ typedef enum {
 	CALL
 } wam_call_t;
 
+char *OP_NAMES(wam_op_t op);
+
 #endif

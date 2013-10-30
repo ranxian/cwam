@@ -440,6 +440,7 @@ int first_occur(char *var)
 
 prog_t *syn_node_to_prog(syn_node_t *tree)
 {
+	printf("[syn_node_to_prog begin] %s\n", NODE_NAMES(tree->type));
 	if (tree == NULL) NULL;
 	prog_t *prog = prog_init();
 
@@ -449,6 +450,7 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 				if (tree->left == NULL) { free(prog); return NULL; };
 				prog_add_node(prog, tree->left);
 			   	prog_add_node(prog, tree->right);
+			   	break;
 			}
 		case S_CONDITION:
 			{
@@ -477,16 +479,20 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 						s = s->right;
 					}
 				}
+
 				prog_add_stmt(prog, stmt_init("", OP_CALL, 1, tree->left->value));
+				break;
 			}
 		case S_HEAD:
 			{
-				int i, pos, total, m = 0;
+				int i, pos, total, m;
 				char name[MAX_WORD_LEN];
 				syn_node_t *pred_n = tree->left;
+				m = 0;
 				for (i = 0; pred_n->value[i] != '~'; i++)
 					name[m++] = pred_n->value[i];
 				name[m] = 0;
+				m = 0;
 				for (i = i+1; pred_n->value[i] != '/'; i++)
 					temp[m++] = pred_n->value[i];
 				temp[m] = 0;
@@ -496,18 +502,17 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 					temp[m++] = pred_n->value[i];
 				temp[m] = 0;
 				total = atoi(temp);
-
 				if (total == 1)
 					strcpy(pred_n->value, name);
 				else
 					sprintf(pred_n->value, "%s~%d", name, pos);
-
 				if (pos < total) {
 					sprintf(temp, "%s~%d", name, pos + 1);
 					if (pos > 1) {
 						prog_add_stmt(prog, stmt_init(pred_n->value, OP_RTRY_ME_ELSE, 1, temp));
 					} else {
-						prog_add_stmt(prog, stmt_init(pred_n->value, OP_TRY_ME_ELSE, 1, temp));
+						stmt_t *stmt = stmt_init(pred_n->value, OP_TRY_ME_ELSE, 1, temp);
+						prog_add_stmt(prog, stmt);
 					}
 				} else {
 					prog_add_stmt(prog, stmt_init(pred_n->value, OP_TRUST_ME, 0));
@@ -515,10 +520,12 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 
 				if (tree->right != NULL) {
 					syn_node_t *s = tree->right;
-					int argcount;
+					int argcount = 0;
+
 					while (s != NULL) {
-						if (s->left->type == S_CONSTANT)
+						if (s->left->type == S_CONSTANT) {
 							prog_add_stmt(prog, stmt_init("", OP_GET_CONST, 2, s->left->value, cnt_arg(argcount)));
+						}
 						else if (s->left->type == S_VARIABLE) {
 							if (first_occur(s->left->value))
 								prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, s->left->value, cnt_arg(argcount)));
@@ -526,12 +533,13 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 						} else {
 							char *decor = deco_var("");
 							prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, decor, cnt_arg(argcount)));
+
 							prog_add_node(prog, tree->left);
 							prog_add_stmt(prog, stmt_init("", OP_UNI_VAR, 2, decor, last_var));
 						}
+						argcount++;
+						s = s->right;
 					}
-					argcount++;
-					s = s->right;
 				}
 				break;
 			}

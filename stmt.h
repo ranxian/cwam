@@ -10,12 +10,14 @@
 typedef struct {
 	char label[MAX_WORD_LEN];
 	wam_op_t op;
-	char **args;
+	char *args[3];
 	int narg;
 	int jump;
 } stmt_t;
 
 stmt_t *stmt_init(char *label, wam_op_t op, int narg, ...);
+
+stmt_t *stmt_copy(stmt_t *stmt);
 
 void stmt_destroy(stmt_t *stmt);
 

@@ -27,7 +27,7 @@ static int preprocess_names(syn_node_t *root)
 				kv = kv_tbl_lookup(table, pred_n->value);
 			}
 
-			sprintf(pred_n->value, "%s~%d", pred_n->value, kv->intval);
+			sprintf(pred_n->value, "%s~%d", pred_n->value, kv->intval+1);
 
 			kv->intval += 1;
 			prog_n = prog_n->right;
@@ -56,7 +56,7 @@ static int preprocess_names(syn_node_t *root)
 	return 0;
 }
 
-static int compile(char *code)
+prog_t *compile(char *code)
 {
 	syn_node_t *root = syn_node_init();
 	toks_t *toks = toks_init(code);
@@ -65,7 +65,7 @@ static int compile(char *code)
 		syn_node_traverse(root);
 		preprocess_names(root);
 	}
-	return 0;
+	return syn_node_to_prog(root);
 }
 
 int compile_program(char *filename)
@@ -77,8 +77,9 @@ int compile_program(char *filename)
 	while (fgets(line, MAX_LINE_LEN, file) != NULL) {
 		strcat(buf, line);
 	}
-	compile(buf);
-
+	prog_t *prog = compile(buf);
+	prog_info(prog);
+	prog_destroy(prog);
 	fclose(file);
 	return 0;
 }

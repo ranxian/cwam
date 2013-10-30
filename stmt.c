@@ -4,7 +4,7 @@
 
 stmt_t *stmt_init(char *label, wam_op_t op, int narg, ...)
 {
-	stmt_t *stmt;
+	stmt_t *stmt = malloc(sizeof(stmt_t));
 	strcpy(stmt->label, label);
 	stmt->op = op;
 	stmt->jump = -1;
@@ -31,22 +31,35 @@ void stmt_destroy(stmt_t *stmt)
 	free(stmt);
 }
 
+stmt_t *stmt_copy(stmt_t *stmt)
+{
+	stmt_t *copy = malloc(sizeof(stmt_t));
+	memcpy(copy, stmt, sizeof(stmt_t));
+	int i;
+	for (i = 0; i < stmt->narg; i++) {
+		copy->args[i] = malloc(sizeof(strlen(stmt->args[i])));
+		strcpy(copy->args[i], stmt->args[i]);
+	}
+	strcpy(copy->label, stmt->label);
+	return copy;
+}
+
 void stmt_info(stmt_t *stmt)
 {
-	if (strcmp(stmt->label, ";") == 0)
+	if (strcmp(stmt->label, ";") == 0) {
 		printf("; %d\n", stmt->op);
+	}
 
 	char buf[MAX_LINE_LEN] = {};
 
 	if (stmt->label[0] != 0) {
 		sprintf(buf, "%12s: ", stmt->label);
 	} else {
-		sprintf(buf, "            ");
+		sprintf(buf, "              ");
 	}
 
-	sprintf(buf, "%s%d", buf, stmt->op);
+	sprintf(buf, "%s%s", buf, OP_NAMES(stmt->op));
 	int i;
-
 	for (i = 0; i < stmt->narg; i++) {
 		sprintf(buf, "%s %s", buf, stmt->args[i]);
 	}
