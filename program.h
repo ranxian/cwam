@@ -4,19 +4,19 @@
 #define MAX_LABEL_LEN 128
 
 typedef enum {
-	Call_Write,         
-	Call_WriteLn,       
-	Call_NewLine,       
-	Call_Consult,       
-	Call_Reconsult,     
-	Call_Load,          
-	Call_Assert,        
-	Call_RetractOne,    
-	Call_RetractAll,    
-	Call_IsInteger,     
-	Call_IsAtom,        
-	Call_IsBound,       
-	Call_ReadLn,        
+	Call_Write,
+	Call_WriteLn,
+	Call_NewLine,
+	Call_Consult,
+	Call_Reconsult,
+	Call_Load,
+	Call_Assert,
+	Call_RetractOne,
+	Call_RetractAll,
+	Call_IsInteger,
+	Call_IsAtom,
+	Call_IsBound,
+	Call_ReadLn,
 	Call_Call
 } call_t;
 
@@ -26,7 +26,9 @@ typedef struct  {
 	int nlabel;
 } prog_t;
 
-prog_t prog_init();
+prog_t *prog_init();
+
+void prog_destroy(prog_t *prog);
 
 int prog_add_prog(prog_t *prog, prog_t *adding);
 

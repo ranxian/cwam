@@ -1,9 +1,9 @@
 #ifndef SYNTAXTREE_H
 #define SYNTAXTREE_H
 #define MAX_VAL_LEN 256
-
+#include "program.h"
 typedef enum { S_CLAUSE, S_PROGRAM, S_HEAD, S_BODY, S_PREDICATE, S_LIST, S_CONDITION,
-				S_VARIABLE, S_EXPR, S_ELEM, S_COMP, S_STRUCT, S_CONSTANT, S_NONE } syn_node_type_t;
+				S_VARIABLE, S_EXPR, S_ELEM, S_COMP, S_STRUCT, S_CONSTANT, S_NONE, S_CALL, S_NON_CALL } syn_node_type_t;
 
 typedef struct syn_node_t {
 	struct syn_node_t *left;
@@ -14,7 +14,7 @@ typedef struct syn_node_t {
 
 void syn_node_traverse(syn_node_t *node);
 
-void syn_node_to_code(syn_node_t *tree, char code[]);
+prog_t *syn_node_to_prog(syn_node_t *tree);
 
 syn_node_t *syn_node_init();
 

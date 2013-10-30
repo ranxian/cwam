@@ -47,8 +47,36 @@ void syn_node_traverse(syn_node_t *node)
 	print_node(node, 0);
 }
 
-void syn_node_to_code(syn_node_t *tree, char code[])
+prog_t *syn_node_to_prog(syn_node_t *tree)
 {
+	if (tree = NULL) NULL;
+	prog_t *prog = prog_init();
+
+	switch (tree->type) {
+		case S_PROGRAM:
+			{
+				if (tree->left == NULL) { free(prog); return NULL; };
+				prog_t *p1 = syn_node_to_prog(tree->left);
+				prog_t *p2 = syn_node_to_prog(tree->right);
+				prog_add_prog(prog, p1), prog_add_prog(prog, p2);
+				prog_destroy(p1), prog_destroy(p2);
+			}
+		case S_CONDITION:
+			{
+				if (tree->right != NULL) {
+					syn_node_t *s = tree->right;
+
+					while (s != NULL) {
+						switch (s->left->type) {
+							case S_CONSTANT:
+								prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, s->left->value, ))
+						}
+					}
+
+					syn_node_destroy(s);
+				}
+			}
+	}
 
 }
 
