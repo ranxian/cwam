@@ -4,11 +4,11 @@ prog_t *prog_init() { return NULL; }
 
 void prog_destroy(prog_t *prog) {  }
 
-int prog_add_prog(prog_t *prog, prog_t *adding){ return 0; }
+int prog_add_node(prog_t *prog, syn_node_t *node) { return 0;}
 
-int prog_add_stmt(prog_t *prog, stmt_t *stmt){return 0; }
+int prog_add_stmt(prog_t *prog, stmt_t *stmt){ return 0; }
 
-int prog_add_stmt_at(prog_t *prog, int pos){ return 0; }
+int prog_add_stmt_at(prog_t *prog, stmt_t *stmt, int pos){ return 0; }
 
 int prog_del_from_line(prog_t *prog, int lineno){ return 0; }
 

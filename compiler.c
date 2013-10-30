@@ -14,7 +14,15 @@ static char temp[MAX_WORD_LEN];
 
 static char *last_var = NULL;
 
+static int body_calls = 0;
+
 static kv_tbl_t *table;
+
+char *cnt_arg(int count)
+{
+	sprintf(temp, "A%d", count);
+	return temp;
+}
 
 int inline push_stat(toks_t *toks, syn_node_t *tree)
 {
@@ -439,35 +447,29 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 		case S_PROGRAM:
 			{
 				if (tree->left == NULL) { free(prog); return NULL; };
-				prog_t *p1 = syn_node_to_prog(tree->left);
-				prog_t *p2 = syn_node_to_prog(tree->right);
-				prog_add_prog(prog, p1), prog_add_prog(prog, p2);
-				prog_destroy(p1), prog_destroy(p2);
+				prog_add_node(prog, tree->left);
+			   	prog_add_node(prog, tree->right);
 			}
 		case S_CONDITION:
 			{
+				body_calls += 1;
 				if (tree->right != NULL) {
 					syn_node_t *s = tree->right;
 					int argcount = 0;
 					while (s != NULL) {
 						switch (s->left->type) {
 							case S_CONSTANT:
-								sprintf(temp, "A%d", argcount);
-								prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, s->left->value, temp));
+								prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, s->left->value, cnt_arg(argcount)));
 								break;
 							case S_VARIABLE:
 								if (var_prefix == 'Q' && first_occur(s->left->value))
 									prog_add_stmt(prog, stmt_init("", OP_CREATE_VAR, 2, deco_var(s->left->value), s->left->value));
-								sprintf(temp, "A%d", argcount);
-								prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, deco_var(s->left->value), temp));
+								prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, deco_var(s->left->value), cnt_arg(argcount)));
 								break;
 							default:
 								{
-									prog_t *p = syn_node_to_prog(tree->right);
-									prog_add_prog(prog, p);
-									sprintf(temp, "A%d", argcount);
-									prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, last_var, temp));
-									prog_destroy(p);
+									prog_add_node(prog, tree->right);
+									prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, last_var, cnt_arg(argcount)));
 									break;
 								}
 						}
@@ -477,12 +479,142 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 				}
 				prog_add_stmt(prog, stmt_init("", OP_CALL, 1, tree->left->value));
 			}
+		case S_HEAD:
+			{
+				int i, pos, total, m = 0;
+				char name[MAX_WORD_LEN];
+				syn_node_t *pred_n = tree->left;
+				for (i = 0; pred_n->value[i] != '~'; i++)
+					name[m++] = pred_n->value[i];
+				name[m] = 0;
+				for (i = i+1; pred_n->value[i] != '/'; i++)
+					temp[m++] = pred_n->value[i];
+				temp[m] = 0;
+				pos = atoi(temp);
+				m = 0;
+				for (i = i+1; pred_n->value[i]; i++)
+					temp[m++] = pred_n->value[i];
+				temp[m] = 0;
+				total = atoi(temp);
+
+				if (total == 1)
+					strcpy(pred_n->value, name);
+				else
+					sprintf(pred_n->value, "%s~%d", name, pos);
+
+				if (pos < total) {
+					sprintf(temp, "%s~%d", name, pos + 1);
+					if (pos > 1) {
+						prog_add_stmt(prog, stmt_init(pred_n->value, OP_RTRY_ME_ELSE, 1, temp));
+					} else {
+						prog_add_stmt(prog, stmt_init(pred_n->value, OP_TRY_ME_ELSE, 1, temp));
+					}
+				} else {
+					prog_add_stmt(prog, stmt_init(pred_n->value, OP_TRUST_ME, 0));
+				}
+
+				if (tree->right != NULL) {
+					syn_node_t *s = tree->right;
+					int argcount;
+					while (s != NULL) {
+						if (s->left->type == S_CONSTANT)
+							prog_add_stmt(prog, stmt_init("", OP_GET_CONST, 2, s->left->value, cnt_arg(argcount)));
+						else if (s->left->type == S_VARIABLE) {
+							if (first_occur(s->left->value))
+								prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, s->left->value, cnt_arg(argcount)));
+							else prog_add_stmt(prog, stmt_init("", OP_GET_VAL, 2, s->left->value, cnt_arg(argcount)));
+						} else {
+							char *decor = deco_var("");
+							prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, decor, cnt_arg(argcount)));
+							prog_add_node(prog, tree->left);
+							prog_add_stmt(prog, stmt_init("", OP_UNI_VAR, 2, decor, last_var));
+						}
+					}
+					argcount++;
+					s = s->right;
+				}
+				break;
+			}
+		case S_CONSTANT:
+			prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, tree->value, deco_var("")));
+			break;
+		case S_VARIABLE:
+			prog_add_stmt(prog, stmt_init("", OP_PUT_VAR, 2, deco_var(tree->value), deco_var("")));
+			break;
+		case S_LIST:
+			if (tree->left != NULL) {
+				prog_add_node(prog, tree->left);
+				char *lvar, *rvar;
+				if (tree->left->type == S_VARIABLE)
+					lvar = deco_var(tree->left->value);
+				else lvar = last_var;
+				if (tree->right == NULL) {
+					prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, "[]", deco_var("")));
+					return prog;
+				} else {
+					prog_add_node(prog, tree->right);
+					rvar = last_var;
+				}
+				prog_add_stmt(prog, stmt_init("", OP_UNI_LIST, 3, deco_var(""), lvar, rvar));
+				return prog;
+			} else {
+				prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, "[]", deco_var("")));
+			}
+			break;
+		case S_STRUCT:
+			{
+				char lvar[MAX_WORD_LEN], rvar[MAX_WORD_LEN];
+				prog_add_node(prog, tree->left);
+				strcpy(lvar, last_var);
+				prog_add_node(prog, tree->right);
+				strcpy(rvar, last_var);
+				prog_add_stmt(prog, stmt_init("", OP_UNI_STRUC, 3, deco_var(""), lvar, rvar));
+				return prog;
+			}
+			break;
+		case S_CLAUSE:
+			{
+				if (table != NULL)
+					kv_tbl_destroy(table);
+				table = kv_tbl_init();
+				body_calls = 0;
+
+				prog_add_node(prog, tree->left);
+				prog_add_node(prog, tree->right);
+
+				if (table->len > 0 || body_calls > 0) {
+					prog_add_stmt_at(prog, stmt_init("", OP_ALLOC, 0), 1);
+					prog_add_stmt(prog, stmt_init("", OP_DEALLOC, 0));
+				}
+				prog_add_stmt(prog, stmt_init("", OP_PROCEED, 0));
+			}
+			break;
+		case S_BODY:
+			{
+				syn_node_t *s = tree;
+				while (s != NULL) {
+					prog_add_node(prog, s->left);
+					s = s->right;
+				}
+			}
+			break;
+		case S_QUERY:
+			{
+				if (tree->left == NULL) {
+					free(prog);
+					return NULL;
+				}
+				prog_add_node(prog, tree->left);
+				if (tree->right != NULL)
+					prog_add_node(prog, tree->right);
+				prog_add_stmt(prog, stmt_init("", OP_HALT, 0));
+			}
 		default:
 			printf("syn_node_to_prog panic!\n");
 			break;
 	}
 
-	return 0;
+	return prog;
 }
 
 void compiler_begin()
