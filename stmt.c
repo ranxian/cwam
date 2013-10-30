@@ -7,6 +7,7 @@ stmt_t *stmt_init(char *label, wam_op_t op, int narg, ...)
 	stmt_t *stmt;
 	strcpy(stmt->label, label);
 	stmt->op = op;
+	stmt->jump = -1;
 
 	va_list ap;
 	va_start(ap, narg);
@@ -32,5 +33,26 @@ void stmt_destroy(stmt_t *stmt)
 
 void stmt_info(stmt_t *stmt)
 {
-	printf("not implemented\n");
+	if (strcmp(stmt->label, ";") == 0)
+		printf("; %d\n", stmt->op);
+
+	char buf[MAX_LINE_LEN] = {};
+
+	if (stmt->label[0] != 0) {
+		sprintf(buf, "%12s: ", stmt->label);
+	} else {
+		sprintf(buf, "            ");
+	}
+
+	sprintf(buf, "%s%d", buf, stmt->op);
+	int i;
+
+	for (i = 0; i < stmt->narg; i++) {
+		sprintf(buf, "%s %s", buf, stmt->args[i]);
+	}
+
+	if (stmt->jump >= 0)
+		sprintf(buf, "%s (%d)", buf, stmt->jump);
+
+	printf("%s\n", buf);
 }

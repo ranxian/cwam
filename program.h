@@ -51,4 +51,6 @@ int prog_locate_label(prog_t *prog, const char *label);
 int prog_update_label(prog_t *prog);
 
 int prog_add_node(prog_t *prog, syn_node_t *node);
+
+void prog_info(prog_t *prog);
 #endif

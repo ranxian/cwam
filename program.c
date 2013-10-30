@@ -1,6 +1,7 @@
 #include "program.h"
 #include "compiler.h"
 #include <string.h>
+#include <stdio.h>
 
 prog_t *prog_init()
 {
@@ -88,3 +89,12 @@ int prog_add_clause(prog_t *prog, const char *label, prog_t *adding){ return 0; 
 int prog_locate_label(prog_t *prog, const char *label){ return 0; }
 
 int prog_update_label(prog_t *prog){ return 0; }
+
+void prog_info(prog_t *prog)
+{
+	int i;
+	for (i = 0; i < prog->nstmt; i++) {
+		printf("%3d:\t", i);
+		stmt_info(prog->stmts[i]);
+	}
+}
