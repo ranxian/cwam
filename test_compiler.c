@@ -1,11 +1,15 @@
 #include "compiler.h"
 #include "syntaxtree.h"
-#include "key_val.h"
+#include "kv.h"
 #include <stdio.h>
+
+char var_prefix;
 
 int main()
 {
 	compiler_begin();
+	var_prefix = 'Q';
+
 	char *constant = "foo";
 	char *var = "Bar";
 	char *num = "12.2";

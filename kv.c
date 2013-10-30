@@ -1,4 +1,4 @@
-#include "key_val.h"
+#include "kv.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -9,7 +9,7 @@ kv_tbl_t *kv_tbl_init()
 	return table;
 }
 
-void kv_tbl_destory(kv_tbl_t *table)
+void kv_tbl_destroy(kv_tbl_t *table)
 {
 	free(table);
 }
@@ -28,13 +28,14 @@ kv_t *kv_tbl_lookup(kv_tbl_t *table, char *key)
 kv_t *kv_tbl_insert(kv_tbl_t *table, char *key, int intval, char *strval)
 {
 	int len = table->len;
-	if (len + 1 >= MAX_KV_NUM) return -1;
+	if (len + 1 >= MAX_KV_NUM) return NULL;
 	strcpy(table->kvs[len].key, key);
-	strcpy(table->kvs[len].strval, strval);
+	if (strval != NULL)
+		strcpy(table->kvs[len].strval, strval);
 	table->kvs[len].intval = intval;
 	table->len += 1;
 
-	return table->kvs[len];
+	return &table->kvs[len];
 }
 int kv_tbl_contains(kv_tbl_t *table, char *key)
 {
@@ -43,5 +44,5 @@ int kv_tbl_contains(kv_tbl_t *table, char *key)
 		if (strcmp(key, table->kvs[i].key) == 0)
 			return 1;
 	}
-	return 1;
+	return 0;
 }

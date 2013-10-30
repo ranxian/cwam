@@ -3,7 +3,7 @@
 #include <string.h>
 #include "compiler.h"
 #include "defs.h"
-#include "key_val.h"
+#include "kv.h"
 #define is_anum(c) (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_')
 #define SEQL(s1, s2) (strcmp((s1), (s2)) == 0)
 #define is_comp(s) (SEQL((s), ">") || SEQL((s), "<") || SEQL((s), ">=") || SEQL((s), "<=") || \
@@ -481,6 +481,8 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 			printf("syn_node_to_prog panic!\n");
 			break;
 	}
+
+	return 0;
 }
 
 void compiler_begin()

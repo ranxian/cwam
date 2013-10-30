@@ -4,6 +4,7 @@
 #include "machine.h"
 #include "defs.h"
 #include "stdarg.h"
+#include <stdlib.h>
 #define MAX_OPR_NUM 16
 
 typedef struct {
