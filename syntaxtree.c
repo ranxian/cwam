@@ -45,3 +45,8 @@ void syn_node_traverse(syn_node_t *node)
 {
 	print_node(node, 0);
 }
+
+void syn_node_to_code(syn_node_t *tree, char code[])
+{
+
+}

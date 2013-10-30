@@ -14,4 +14,6 @@ typedef struct syn_node_t {
 
 void syn_node_traverse(syn_node_t *node);
 
+void syn_node_to_code(syn_node_t *tree, char code[]);
+
 #endif
