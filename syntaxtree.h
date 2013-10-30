@@ -14,8 +14,6 @@ typedef struct syn_node_t {
 
 void syn_node_traverse(syn_node_t *node);
 
-prog_t *syn_node_to_prog(syn_node_t *tree);
-
 syn_node_t *syn_node_init();
 
 void syn_node_destroy(syn_node_t *);

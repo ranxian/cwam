@@ -2,11 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compiler.h"
+#include "defs.h"
+#include "key_val.h"
 #define is_anum(c) (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_')
 #define SEQL(s1, s2) (strcmp((s1), (s2)) == 0)
 #define is_comp(s) (SEQL((s), ">") || SEQL((s), "<") || SEQL((s), ">=") || SEQL((s), "<=") || \
 					SEQL((s), "!=") || SEQL((s), "=="))
 #define CUR_TOK(toks) ((toks)->tokens[(toks)->idx])
+
+static char temp[MAX_WORD_LEN];
+static kv_tbl_t *table;
+
 int inline push_stat(toks_t *toks, syn_node_t *tree)
 {
 	int old_idx = toks->idx;
@@ -399,4 +405,57 @@ int toks_destroy(toks_t *toks)
 int is_token(toks_t *toks, const char *token)
 {
 	return strcmp(toks->tokens[toks->idx], token) == 0;
+}
+
+prog_t *syn_node_to_prog(syn_node_t *tree)
+{
+	if (tree == NULL) NULL;
+	prog_t *prog = prog_init();
+
+	switch (tree->type) {
+		case S_PROGRAM:
+			{
+				if (tree->left == NULL) { free(prog); return NULL; };
+				prog_t *p1 = syn_node_to_prog(tree->left);
+				prog_t *p2 = syn_node_to_prog(tree->right);
+				prog_add_prog(prog, p1), prog_add_prog(prog, p2);
+				prog_destroy(p1), prog_destroy(p2);
+			}
+		case S_CONDITION:
+			{
+				if (tree->right != NULL) {
+					syn_node_t *s = tree->right;
+					int argcount = 0;
+					while (s != NULL) {
+						switch (s->left->type) {
+							case S_CONSTANT:
+								sprintf(temp, "A%d", argcount);
+								prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, s->left->value, temp));
+								break;
+							case S_VARIABLE:
+								if (var_prefix == 'Q' && first_occur(s->left->value))
+									prog_add_stmt(prog, stmt_init("", OP_CREATE_VAR, deco_var(s->left->value), s->left->value));
+								sprintf(temp, "A%d", argcount);
+								prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, deco_var(s->left->value), temp));
+								break;
+							default:
+								prog_t *p = syn_node_to_prog(tree->right);
+								prog_add_prog(prog, p);
+								sprintf(temp, "A%d", argcount);
+								prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, last_var, argcount));
+								prog_destroy(p);
+								break;
+						}
+						argcount += 1;
+						s = s->right;
+					}
+
+					syn_node_destroy(s);
+				}
+			}
+		default:
+			printf("syn_node_to_prog panic!\n");
+			break;
+	}
+
 }

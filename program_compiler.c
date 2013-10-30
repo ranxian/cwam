@@ -1,21 +1,16 @@
 #include "program_compiler.h"
 #include "compiler.h"
 #include "syntaxtree.h"
+#include "key_val.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-typedef struct {
-	char key[256];
-	int intval;
-	char strval[256];
-} key_val_t;
 
 static int preprocess_names(syn_node_t *root)
 {
 	printf("start processing names\n");
 
-	key_val_t keyvals[128];
+	key_val_t keyvals[MAX_KV_NUM];
 	int nkey = 0;
 
 	syn_node_t *prog_n, *pred_n;

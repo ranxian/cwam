@@ -2,6 +2,8 @@
 #define COMPILER_H
 #define MAX_TOK_LEN 1024
 #include "syntaxtree.h"
+#include "stmt.h"
+#include "program.h"
 
 typedef struct {
 	char *tokens[MAX_TOK_LEN];
@@ -37,4 +39,8 @@ int toks_destroy(toks_t *toks);
 
 int push_stat(toks_t *toks, syn_node_t *tree);
 int pop_stat(toks_t *toks, syn_node_t *tree, int old_idx);
+
+char var_prefix = 'Q';
+prog_t *syn_node_to_prog(syn_node_t *tree);
+
 #endif
