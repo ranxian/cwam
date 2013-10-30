@@ -2,6 +2,7 @@
 #define PROGRAM_H
 #define MAX_STATEMENTS_NUM 1024
 #define MAX_LABEL_LEN 128
+#include "stmt.h"
 
 typedef enum {
 	Call_Write,

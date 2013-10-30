@@ -25,7 +25,7 @@ kv_t *kv_tbl_lookup(kv_tbl_t *table, char *key)
 	return NULL;
 }
 
-int kv_tbl_insert(kv_tbl_t *table, char *key, int intval, char *strval)
+kv_t *kv_tbl_insert(kv_tbl_t *table, char *key, int intval, char *strval)
 {
 	int len = table->len;
 	if (len + 1 >= MAX_KV_NUM) return -1;
@@ -33,7 +33,8 @@ int kv_tbl_insert(kv_tbl_t *table, char *key, int intval, char *strval)
 	strcpy(table->kvs[len].strval, strval);
 	table->kvs[len].intval = intval;
 	table->len += 1;
-	return 0;
+
+	return table->kvs[len];
 }
 int kv_tbl_contains(kv_tbl_t *table, char *key)
 {

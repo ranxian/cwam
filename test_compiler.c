@@ -1,9 +1,11 @@
 #include "compiler.h"
 #include "syntaxtree.h"
+#include "key_val.h"
 #include <stdio.h>
 
 int main()
 {
+	compiler_begin();
 	char *constant = "foo";
 	char *var = "Bar";
 	char *num = "12.2";
@@ -27,4 +29,5 @@ int main()
 
 	toks_destroy(toks);
 	syn_node_destroy(root);
+	compiler_end();
 }

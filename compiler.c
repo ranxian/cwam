@@ -11,6 +11,9 @@
 #define CUR_TOK(toks) ((toks)->tokens[(toks)->idx])
 
 static char temp[MAX_WORD_LEN];
+
+static char *last_var = NULL;
+
 static kv_tbl_t *table;
 
 int inline push_stat(toks_t *toks, syn_node_t *tree)
@@ -407,6 +410,26 @@ int is_token(toks_t *toks, const char *token)
 	return strcmp(toks->tokens[toks->idx], token) == 0;
 }
 
+char *deco_var(char *var)
+{
+	kv_t *kv;
+
+	kv = kv_tbl_lookup(table, var);
+	if (kv == NULL) {
+		char value[MAX_WORD_LEN];
+		sprintf(value, "%c%d", var_prefix, table->len);
+		kv = kv_tbl_insert(table, var, 0, value);
+	}
+	last_var = kv->strval;
+
+	return last_var;
+}
+
+int first_occur(char *var)
+{
+	return !kv_tbl_contains(table, var);
+}
+
 prog_t *syn_node_to_prog(syn_node_t *tree)
 {
 	if (tree == NULL) NULL;
@@ -434,28 +457,38 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 								break;
 							case S_VARIABLE:
 								if (var_prefix == 'Q' && first_occur(s->left->value))
-									prog_add_stmt(prog, stmt_init("", OP_CREATE_VAR, deco_var(s->left->value), s->left->value));
+									prog_add_stmt(prog, stmt_init("", OP_CREATE_VAR, 2, deco_var(s->left->value), s->left->value));
 								sprintf(temp, "A%d", argcount);
-								prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, deco_var(s->left->value), temp));
+								prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, deco_var(s->left->value), temp));
 								break;
 							default:
-								prog_t *p = syn_node_to_prog(tree->right);
-								prog_add_prog(prog, p);
-								sprintf(temp, "A%d", argcount);
-								prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, last_var, argcount));
-								prog_destroy(p);
-								break;
+								{
+									prog_t *p = syn_node_to_prog(tree->right);
+									prog_add_prog(prog, p);
+									sprintf(temp, "A%d", argcount);
+									prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, last_var, temp));
+									prog_destroy(p);
+									break;
+								}
 						}
 						argcount += 1;
 						s = s->right;
 					}
-
-					syn_node_destroy(s);
 				}
+				prog_add_stmt(prog, stmt_init("", OP_CALL, 1, tree->left->value));
 			}
 		default:
 			printf("syn_node_to_prog panic!\n");
 			break;
 	}
+}
 
+void compiler_begin()
+{
+	table = kv_tbl_init();
+}
+
+void compiler_end()
+{
+	kv_tbl_destroy(table);
 }

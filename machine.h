@@ -5,7 +5,7 @@ typedef enum {
 	OP_ALLOC,
 	OP_DEALLOC,
 	OP_CALL,
-	OP_NOT_CALL
+	OP_NOT_CALL,
 	OP_CREATE_VAR,
 	OP_GET_CONST,
    	OP_GET_VAL,
@@ -22,10 +22,11 @@ typedef enum {
 	OP_TRY_ME_ELSE,
 	OP_UNI_LIST,
 	OP_UNI_STRUC,
-	OP_UNI_VAR,
+	OP_UNI_VAR
 } wam_op_t;
 
 typedef enum {
+	CALL
 } wam_call_t;
 
 #endif
