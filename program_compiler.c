@@ -22,24 +22,15 @@ static int preprocess_names(syn_node_t *root)
 
 			kv_t *kv = NULL;
 			if (!kv_tbl_contains(table, pred_n->value)) {
-				printf("%x\n", (int)kv);
-				
 				kv = kv_tbl_insert(table, pred_n->value, 0, NULL);
-				printf("%x\n", (int)kv);
 			} else {
-				printf("%x\n", (int)kv);
 				kv = kv_tbl_lookup(table, pred_n->value);
-				printf("%x\n", (int)kv);
-
 			}
-			printf("zhzha\n");
 
 			sprintf(pred_n->value, "%s~%d", pred_n->value, kv->intval);
-			printf("zhzha\n");
 
 			kv->intval += 1;
 			prog_n = prog_n->right;
-			printf("zhzha\n");
 
 		}
 		prog_n = root;
