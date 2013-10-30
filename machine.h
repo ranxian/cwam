@@ -22,7 +22,10 @@ typedef enum {
 	OP_TRY_ME_ELSE,
 	OP_UNI_LIST,
 	OP_UNI_STRUC,
-	OP_UNI_VAR
-} machine_op_t;:w
+	OP_UNI_VAR,
+} wam_op_t;
+
+typedef enum {
+} wam_call_t;
 
 #endif

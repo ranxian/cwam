@@ -60,13 +60,12 @@ static int preprocess_names(syn_node_t *root)
 
 static int compile(char *code)
 {
-	tok_stream_t toks;
-	syn_node_t root;
-	toks_init_from_string(&toks, code);
-	if (program(&toks, &root) && toks.idx == toks.len) {
+	syn_node_t *root = syn_node_init();
+	toks_t *toks = toks_init(code);
+	if (program(toks, root) && toks->idx == toks->len) {
 		printf("program compile success.\n");
-		syn_node_traverse(&root);
-		preprocess_names(&root);
+		syn_node_traverse(root);
+		preprocess_names(root);
 	}
 	return 0;
 }

@@ -7,14 +7,14 @@
 #define is_comp(s) (SEQL((s), ">") || SEQL((s), "<") || SEQL((s), ">=") || SEQL((s), "<=") || \
 					SEQL((s), "!=") || SEQL((s), "=="))
 #define CUR_TOK(toks) ((toks)->tokens[(toks)->idx])
-int inline push_stat(tok_stream_t *toks, syn_node_t *tree)
+int inline push_stat(toks_t *toks, syn_node_t *tree)
 {
 	int old_idx = toks->idx;
 	tree->left = malloc(sizeof(syn_node_t));
 	tree->right = malloc(sizeof(syn_node_t));
 	return old_idx;
 }
-int inline pop_stat(tok_stream_t *toks, syn_node_t *tree, int old_idx)
+int inline pop_stat(toks_t *toks, syn_node_t *tree, int old_idx)
 {
 	free(tree->right);
 	free(tree->left);
@@ -82,7 +82,7 @@ int is_predicate(const char *s)
 	return is_constant(s) && !is_num(s) && !(s[0] == '_' && s[1] == 0);
 }
 
-int program(tok_stream_t *toks, syn_node_t *tree)
+int program(toks_t *toks, syn_node_t *tree)
 {
 	printf("test program: %s\n", CUR_TOK(toks));
 	if (toks->idx >= toks->len) return 0;
@@ -101,7 +101,7 @@ int program(tok_stream_t *toks, syn_node_t *tree)
 
 	return 0;
 }
-int predicate(tok_stream_t *toks, syn_node_t *tree)
+int predicate(toks_t *toks, syn_node_t *tree)
 {
 	printf("test predicate: %s\n", CUR_TOK(toks));
 	if (is_predicate(CUR_TOK(toks))) {
@@ -116,7 +116,7 @@ int predicate(tok_stream_t *toks, syn_node_t *tree)
 	}
 	return 0;
 }
-int constant(tok_stream_t *toks, syn_node_t *tree)
+int constant(toks_t *toks, syn_node_t *tree)
 {
 	printf("test constant: %s\n", CUR_TOK(toks));
 	if (is_constant(CUR_TOK(toks))) {
@@ -136,7 +136,7 @@ int constant(tok_stream_t *toks, syn_node_t *tree)
 	toks->idx = old_idx;
 	return 0;
 }
-int clause(tok_stream_t *toks, syn_node_t *tree)
+int clause(toks_t *toks, syn_node_t *tree)
 {
 	printf("test clause: %s\n", CUR_TOK(toks));
 	tree->type = S_CLAUSE;
@@ -157,7 +157,7 @@ int clause(tok_stream_t *toks, syn_node_t *tree)
 
 	return 0;
 }
-int head(tok_stream_t *toks, syn_node_t *tree)
+int head(toks_t *toks, syn_node_t *tree)
 {
 	printf("test head:%s\n", CUR_TOK(toks));
 	tree->type = S_HEAD;
@@ -176,7 +176,7 @@ int head(tok_stream_t *toks, syn_node_t *tree)
 	pop_stat(toks, tree, old_idx);
 	return 0;
 }
-int body(tok_stream_t *toks, syn_node_t *tree)
+int body(toks_t *toks, syn_node_t *tree)
 {
 	tree->type = S_BODY;
 	int old_idx = push_stat(toks, tree);
@@ -195,7 +195,7 @@ int body(tok_stream_t *toks, syn_node_t *tree)
 	pop_stat(toks, tree, old_idx);
 	return 0;
 }
-int list(tok_stream_t *toks, syn_node_t *tree)
+int list(toks_t *toks, syn_node_t *tree)
 {
 	printf("test list: %s\n", CUR_TOK(toks));
 	tree->type = S_LIST;
@@ -219,7 +219,7 @@ int list(tok_stream_t *toks, syn_node_t *tree)
 	pop_stat(toks, tree, old_idx);
 	return 0;
 }
-int condition(tok_stream_t *toks, syn_node_t *tree)
+int condition(toks_t *toks, syn_node_t *tree)
 {
 	tree->type = S_CONDITION;
 	int old_idx = push_stat(toks, tree);
@@ -242,17 +242,17 @@ int condition(tok_stream_t *toks, syn_node_t *tree)
 	return 0;
 }
 // not implemented.
-int expression(tok_stream_t *toks, syn_node_t *tree)
+int expression(toks_t *toks, syn_node_t *tree)
 {
 	return 0;
 }
 // not implemented.
-int comparator(tok_stream_t *toks, syn_node_t *tree)
+int comparator(toks_t *toks, syn_node_t *tree)
 {
 	return 0;
 }
 
-int element(tok_stream_t *toks, syn_node_t *tree)
+int element(toks_t *toks, syn_node_t *tree)
 {
 	printf("test element: %s\n", CUR_TOK(toks));
 	tree->type = S_ELEM;
@@ -271,7 +271,7 @@ int element(tok_stream_t *toks, syn_node_t *tree)
 
 	return 0;
 }
-int structure(tok_stream_t *toks, syn_node_t *tree)
+int structure(toks_t *toks, syn_node_t *tree)
 {
 	printf("test structure: %s\n", CUR_TOK(toks));
 	tree->type = S_STRUCT;
@@ -288,7 +288,7 @@ int structure(tok_stream_t *toks, syn_node_t *tree)
 	return 0;
 }
 
-int variable(tok_stream_t *toks, syn_node_t *tree)
+int variable(toks_t *toks, syn_node_t *tree)
 {
 	printf("test variable: %s\n", CUR_TOK(toks));
 	if (is_variable(CUR_TOK(toks))) {
@@ -301,7 +301,7 @@ int variable(tok_stream_t *toks, syn_node_t *tree)
 	return 0;
 }
 
-int token(tok_stream_t *toks, const char *token)
+int token(toks_t *toks, const char *token)
 {
 	if (strcmp(toks->tokens[toks->idx], token)) {
 		return 0;
@@ -311,7 +311,7 @@ int token(tok_stream_t *toks, const char *token)
 	}
 }
 
-int toks_add_token(tok_stream_t *toks, const char *token, int len)
+int toks_add_token(toks_t *toks, const char *token, int len)
 {
 	toks->tokens[toks->len] = malloc(len + 1);
 	strncpy(toks->tokens[toks->len], token, len);
@@ -320,8 +320,9 @@ int toks_add_token(tok_stream_t *toks, const char *token, int len)
 	return 0;
 }
 
-int toks_init_from_string(tok_stream_t *toks, const char *string)
+toks_t *toks_init(const char *string)
 {
+	toks_t *toks = malloc(sizeof(toks_t));
 	toks->idx = 0;
 	toks->len = 0;
 
@@ -334,7 +335,8 @@ int toks_init_from_string(tok_stream_t *toks, const char *string)
 		if (c == '\'') {
 			if (tlen != 0) {
 				printf("init token stream error!\n");
-				return -1;
+				free(toks);
+				return NULL;
 			}
 			temp[tlen++] = '\'';
 			do {
@@ -344,7 +346,8 @@ int toks_init_from_string(tok_stream_t *toks, const char *string)
 			} while (i < len - 1);
 			if (string[i] != '\'') {
 				printf("' not closed, init token stream error!\n");
-				return -1;
+				free(toks);
+				return NULL;
 			}
 		} else if (c != ' ' && c != '\n' && c != '\t') {
 			if (c == '(' || c == ')' || c == '[' || c == ']' ||
@@ -370,10 +373,10 @@ int toks_init_from_string(tok_stream_t *toks, const char *string)
 		toks_add_token(toks, temp, tlen);
 	tlen = 0;
 
-	return 1;
+	return toks;
 }
 
-void toks_info(tok_stream_t *toks)
+void toks_info(toks_t *toks)
 {
 	int i;
 	printf("token stream info:\n");
@@ -383,16 +386,17 @@ void toks_info(tok_stream_t *toks)
 	}
 }
 
-int toks_destroy(tok_stream_t *toks)
+int toks_destroy(toks_t *toks)
 {
 	int i;
 	for (i = 0; i < toks->len; i++) {
 		free(toks->tokens[i]);
 	}
+	free(toks);
 	return 1;
 }
 
-int is_token(tok_stream_t *toks, const char *token)
+int is_token(toks_t *toks, const char *token)
 {
 	return strcmp(toks->tokens[toks->idx], token) == 0;
 }

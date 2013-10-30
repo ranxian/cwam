@@ -7,33 +7,34 @@ typedef struct {
 	char *tokens[MAX_TOK_LEN];
 	int idx;
 	int len;
-} tok_stream_t;
+} toks_t;
 
 int is_constant(const char *s);
 int is_num(const char* s);
 int is_variable(const char *s);
 int is_predicate(const char *s);
 
-int predicate(tok_stream_t *toks, syn_node_t *tree);
-int constant(tok_stream_t *toks, syn_node_t *tree);
-int program(tok_stream_t *toks, syn_node_t *tree);
-int clause(tok_stream_t *toks, syn_node_t *tree);
-int head(tok_stream_t *toks, syn_node_t *tree);
-int body(tok_stream_t *toks, syn_node_t *tree);
-int list(tok_stream_t *toks, syn_node_t *tree);
-int condition(tok_stream_t *toks, syn_node_t *tree);
-int expression(tok_stream_t *toks, syn_node_t *tree);
-int comparator(tok_stream_t *toks, syn_node_t *tree);
-int structure(tok_stream_t *toks, syn_node_t *tree);
-int variable(tok_stream_t *toks, syn_node_t *tree);
-int element(tok_stream_t *toks, syn_node_t *tree);
-int toks_init_from_string(tok_stream_t *toks, const char *string);
-int token(tok_stream_t *toks, const char *token);
-int is_token(tok_stream_t *toks, const char *token);
-int toks_add_token(tok_stream_t *toks, const char *token, int len);
-void toks_info(tok_stream_t *toks);
-int toks_destroy(tok_stream_t *toks);
+int predicate(toks_t *toks, syn_node_t *tree);
+int constant(toks_t *toks, syn_node_t *tree);
+int program(toks_t *toks, syn_node_t *tree);
+int clause(toks_t *toks, syn_node_t *tree);
+int head(toks_t *toks, syn_node_t *tree);
+int body(toks_t *toks, syn_node_t *tree);
+int list(toks_t *toks, syn_node_t *tree);
+int condition(toks_t *toks, syn_node_t *tree);
+int expression(toks_t *toks, syn_node_t *tree);
+int comparator(toks_t *toks, syn_node_t *tree);
+int structure(toks_t *toks, syn_node_t *tree);
+int variable(toks_t *toks, syn_node_t *tree);
+int element(toks_t *toks, syn_node_t *tree);
 
-int push_stat(tok_stream_t *toks, syn_node_t *tree);
-int pop_stat(tok_stream_t *toks, syn_node_t *tree, int old_idx);
+toks_t *toks_init(const char *string);
+int token(toks_t *toks, const char *token);
+int is_token(toks_t *toks, const char *token);
+int toks_add_token(toks_t *toks, const char *token, int len);
+void toks_info(toks_t *toks);
+int toks_destroy(toks_t *toks);
+
+int push_stat(toks_t *toks, syn_node_t *tree);
+int pop_stat(toks_t *toks, syn_node_t *tree, int old_idx);
 #endif

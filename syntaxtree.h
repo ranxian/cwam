@@ -16,4 +16,8 @@ void syn_node_traverse(syn_node_t *node);
 
 void syn_node_to_code(syn_node_t *tree, char code[]);
 
+syn_node_t *syn_node_init();
+
+void syn_node_destroy(syn_node_t *);
+
 #endif

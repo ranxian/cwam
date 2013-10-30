@@ -1,4 +1,5 @@
 #include "syntaxtree.h"
+#include <stdlib.h>
 #include <stdio.h>
 
 void print_indent(int indent)
@@ -49,4 +50,14 @@ void syn_node_traverse(syn_node_t *node)
 void syn_node_to_code(syn_node_t *tree, char code[])
 {
 
+}
+
+syn_node_t *syn_node_init() { return malloc(sizeof(syn_node_t)); }
+
+void syn_node_destroy(syn_node_t *tree)
+{
+	if (tree = NULL) return;
+	syn_node_destroy(tree->left);
+	syn_node_destroy(tree->right);
+	free(tree);
 }

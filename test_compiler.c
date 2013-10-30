@@ -12,18 +12,19 @@ int main()
 
 	char *code = "son(paul, jinny). father(X, Y) :- son(Y, X).";
 	printf("code: %s\n", code);
-	tok_stream_t toks;
-	toks_init_from_string(&toks, code);
-	toks_info(&toks);
+	toks_t *toks = toks_init(code);
+	toks_info(toks);
 
-	syn_node_t root;
-	root.left = root.right = NULL;
-	root.type = S_NONE;
 
-	if (program(&toks, &root)) {
+	syn_node_t *root = syn_node_init();
+	root->left = root->right = NULL;
+	root->type = S_NONE;
+
+	if (program(toks, root)) {
 		printf("parse success\n");
-		syn_node_traverse(&root);
+		syn_node_traverse(root);
 	}
 
-	toks_destroy(&toks);
+	toks_destroy(toks);
+	syn_node_destroy(root);
 }
