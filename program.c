@@ -1,14 +1,81 @@
 #include "program.h"
+#include "compiler.h"
+#include <string.h>
 
-prog_t *prog_init() { return NULL; }
+prog_t *prog_init()
+{
+	prog_t *prog = malloc(sizeof(prog_t));
+	prog->nlabel = prog->nstmt = 0;
 
-void prog_destroy(prog_t *prog) {  }
+	return prog;
+}
 
-int prog_add_node(prog_t *prog, syn_node_t *node) { return 0;}
+void prog_destroy(prog_t *prog)
+{
+	int i;
+	for (i = 0; i < prog->nstmt; i++)
+		stmt_destroy(prog->stmts[i]);
+	free(prog);
+}
 
-int prog_add_stmt(prog_t *prog, stmt_t *stmt){ return 0; }
+static int prog_contains_label(prog_t *prog, char *label)
+{
+	int i;
+	for (i = 0; i < prog->nlabel; i++) {
+		if (strcmp(prog->labels[i], label) == 0)
+			return 1;
+	}
+	return 0;
+}
 
-int prog_add_stmt_at(prog_t *prog, stmt_t *stmt, int pos){ return 0; }
+int prog_add_node(prog_t *prog, syn_node_t *node)
+{
+	prog_t *p = syn_node_to_prog(node);
+
+	int can_add = 1;
+	int i;
+
+	for (i = 0; i < p->nstmt; i++) {
+		stmt_t *stmt = p->stmts[i];
+		char *label = stmt->label;
+		if (strlen(label) > 0) {
+			if (prog_contains_label(prog, label)) {
+				can_add = 0;
+				break;
+			}
+		} else {
+			strcpy(prog->labels[prog->nlabel], label);
+			prog->nlabel += 1;
+			can_add = 1;
+		}
+		if (can_add) {
+			prog_add_stmt(prog, stmt);
+		}
+	}
+
+	prog_destroy(prog);
+	return 0;
+}
+
+int prog_add_stmt(prog_t *prog, stmt_t *stmt)
+{
+	prog->stmts[prog->nstmt] = stmt;
+	prog->stmts[prog->nstmt] = malloc(sizeof(stmt_t));
+	memcpy(prog->stmts[prog->nstmt], stmt, sizeof(stmt_t));
+	prog->nstmt += 1;
+	return 0;
+}
+
+int prog_add_stmt_at(prog_t *prog, stmt_t *stmt, int pos)
+{
+	int i;
+	for (i = prog->nstmt; i > pos; i--)
+		prog->stmts[i] = prog->stmts[i - 1];
+	prog->stmts[pos] = malloc(sizeof(stmt_t));
+	memcpy(prog->stmts[pos], stmt, sizeof(stmt_t));
+	prog->nstmt += 1;
+	return 0;
+}
 
 int prog_del_from_line(prog_t *prog, int lineno){ return 0; }
 

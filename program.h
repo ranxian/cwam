@@ -4,6 +4,7 @@
 #define MAX_LABEL_LEN 128
 #include "stmt.h"
 #include "syntaxtree.h"
+#include "defs.h"
 
 typedef enum {
 	Call_Write,
@@ -23,9 +24,10 @@ typedef enum {
 } call_t;
 
 typedef struct  {
-	stmt_t stmts[MAX_STATEMENTS_NUM];
-	char labels[MAX_LABEL_LEN];
+	stmt_t *stmts[MAX_STATEMENTS_NUM];
+	char labels[MAX_LABEL_NUM][MAX_LABEL_LEN];
 	int nlabel;
+	int nstmt;
 } prog_t;
 
 prog_t *prog_init();
