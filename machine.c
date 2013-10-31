@@ -4,18 +4,18 @@ char *OP_NAMES(wam_op_t op)
 {
 	static char *names[] = 
 	{
-		"alloc",
-		"dealloc",
+		"allocate",
+		"deallocate",
 		"call",
 		"not_call",
 		"create_variable",
-		"get_const",
+		"get_constant",
 	   	"get_value",
 		"get_variable",
 		"get_level",
 		"put_value",
 		"put_variable",
-		"put_const",
+		"put_constant",
 		"halt",
 		"noop",
 		"proceed",

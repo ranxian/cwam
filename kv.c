@@ -6,11 +6,13 @@ kv_tbl_t *kv_tbl_init()
 {
 	kv_tbl_t *table = malloc(sizeof(kv_tbl_t));
 	table->len = 0;
+	printf("kv_tbl_init\n");
 	return table;
 }
 
 void kv_tbl_destroy(kv_tbl_t *table)
 {
+	printf("kv_tbl_destroy\n");
 	free(table);
 }
 

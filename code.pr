@@ -1,2 +1,1 @@
-son(paul, jinny). father(X, Y) :- son(Y, X).
-son(s, b).
+p(f(X), h(Y, f(a)), Y).

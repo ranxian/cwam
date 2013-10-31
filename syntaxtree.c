@@ -63,6 +63,8 @@ void print_node(syn_node_t *node, int indent)
 			printf("CONSTANT:\t\t%s\n", node->value); break;
 		case S_NONE:
 			printf("NONE\n"); break;
+		case S_STRUCT:
+			printf("STRUCTURE\n"); break;
 		default:
 			printf("UNKNOWN NODE\n");
 	}

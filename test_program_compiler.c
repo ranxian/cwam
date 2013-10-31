@@ -5,7 +5,7 @@ char var_prefix;
 
 int main()
 {
-	var_prefix = 'Q';
+	var_prefix = 'Y';
 	printf("testing program compiler...\n");
 	char *filename = "code.pr";
 	compile_program(filename);

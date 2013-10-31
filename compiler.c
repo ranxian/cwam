@@ -16,7 +16,7 @@ static char *last_var = NULL;
 
 static int body_calls = 0;
 
-static kv_tbl_t *table;
+kv_tbl_t *table;
 
 char *cnt_arg(int count)
 {
@@ -294,11 +294,15 @@ int structure(toks_t *toks, syn_node_t *tree)
 	tree->type = S_STRUCT;
 	int old_idx = push_stat(toks, tree);
 
-	if (predicate(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
-		return 1;
+	if (predicate(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
+		syn_node_traverse(tree);
+	   	return 1;
+	}
 	toks->idx = old_idx;
-	if (variable(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
+	if (variable(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
+		syn_node_traverse(tree);
 		return 1;
+	}
 
 	pop_stat(toks, tree, old_idx);
 
@@ -422,14 +426,19 @@ char *deco_var(char *var)
 {
 	kv_t *kv;
 
-	kv = kv_tbl_lookup(table, var);
-	if (kv == NULL) {
-		char value[MAX_WORD_LEN];
-		sprintf(value, "%c%d", var_prefix, table->len);
-		kv = kv_tbl_insert(table, var, 0, value);
+	if (strlen(var) > 0 && strcmp(var, "_") == 0) {
+		kv = kv_tbl_lookup(table, var);
+		if (kv != NULL) {
+			last_var = kv->strval;
+			return kv->strval;
+		}
 	}
-	last_var = kv->strval;
 
+	char value[MAX_WORD_LEN];
+	sprintf(value, "%c%d", var_prefix, table->len);
+	kv = kv_tbl_insert(table, var, 0, value);
+	last_var = kv->strval;
+	
 	return last_var;
 }
 
@@ -534,7 +543,7 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 							char *decor = deco_var("");
 							prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, decor, cnt_arg(argcount)));
 
-							prog_add_node(prog, tree->left);
+							prog_add_node(prog, s->left);
 							prog_add_stmt(prog, stmt_init("", OP_UNI_VAR, 2, decor, last_var));
 						}
 						argcount++;
@@ -547,7 +556,9 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 			prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, tree->value, deco_var("")));
 			break;
 		case S_VARIABLE:
-			prog_add_stmt(prog, stmt_init("", OP_PUT_VAR, 2, deco_var(tree->value), deco_var("")));
+			if (var_prefix == 'Q' && first_occur(tree->value))
+				prog_add_stmt(prog, stmt_init("", OP_CREATE_VAR, 2, deco_var(tree->value), tree->value));
+			deco_var(tree->value);
 			break;
 		case S_LIST:
 			if (tree->left != NULL) {
@@ -572,9 +583,12 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 		case S_STRUCT:
 			{
 				char lvar[MAX_WORD_LEN], rvar[MAX_WORD_LEN];
+				printf("begin add tree->left\n");
 				prog_add_node(prog, tree->left);
 				strcpy(lvar, last_var);
+				printf("added tree->left\n");
 				prog_add_node(prog, tree->right);
+				printf("added tree->right\n");
 				strcpy(rvar, last_var);
 				prog_add_stmt(prog, stmt_init("", OP_UNI_STRUC, 3, deco_var(""), lvar, rvar));
 				return prog;
@@ -617,8 +631,11 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 					prog_add_node(prog, tree->right);
 				prog_add_stmt(prog, stmt_init("", OP_HALT, 0));
 			}
+			break;
+		case S_PREDICATE:
+			break;
 		default:
-			printf("syn_node_to_prog panic!\n");
+			printf("syn_node_to_prog panic [%s]!\n", NODE_NAMES(tree->type));
 			break;
 	}
 
