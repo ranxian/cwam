@@ -1,1 +1,3 @@
-p(f(X), h(Y, f(a)), Y).
+male(john).
+male(william).
+son(X,Y) :- father(Y,X).

@@ -426,7 +426,7 @@ char *deco_var(char *var)
 {
 	kv_t *kv;
 
-	if (strlen(var) > 0 && strcmp(var, "_") == 0) {
+	if (strlen(var) > 0 && strcmp(var, "_") != 0) {
 		kv = kv_tbl_lookup(table, var);
 		if (kv != NULL) {
 			last_var = kv->strval;
@@ -438,7 +438,7 @@ char *deco_var(char *var)
 	sprintf(value, "%c%d", var_prefix, table->len);
 	kv = kv_tbl_insert(table, var, 0, value);
 	last_var = kv->strval;
-	
+
 	return last_var;
 }
 
@@ -537,8 +537,8 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 						}
 						else if (s->left->type == S_VARIABLE) {
 							if (first_occur(s->left->value))
-								prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, s->left->value, cnt_arg(argcount)));
-							else prog_add_stmt(prog, stmt_init("", OP_GET_VAL, 2, s->left->value, cnt_arg(argcount)));
+								prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, deco_var(s->left->value), cnt_arg(argcount)));
+							else prog_add_stmt(prog, stmt_init("", OP_GET_VAL, 2, deco_var(s->left->value), cnt_arg(argcount)));
 						} else {
 							char *decor = deco_var("");
 							prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, decor, cnt_arg(argcount)));
@@ -559,20 +559,21 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 			if (var_prefix == 'Q' && first_occur(tree->value))
 				prog_add_stmt(prog, stmt_init("", OP_CREATE_VAR, 2, deco_var(tree->value), tree->value));
 			deco_var(tree->value);
+			printf("variable exit\n");
 			break;
 		case S_LIST:
 			if (tree->left != NULL) {
 				prog_add_node(prog, tree->left);
-				char *lvar, *rvar;
+				char lvar[MAX_WORD_LEN], rvar[MAX_WORD_LEN];
 				if (tree->left->type == S_VARIABLE)
-					lvar = deco_var(tree->left->value);
-				else lvar = last_var;
+					strcpy(lvar, deco_var(tree->left->value));
+				else strcpy(lvar, last_var);
 				if (tree->right == NULL) {
-					prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, "[]", deco_var("")));
-					return prog;
+					strcpy(rvar, deco_var(""));
+					prog_add_stmt(prog, stmt_init("", OP_PUT_CONST, 2, "[]", rvar));
 				} else {
 					prog_add_node(prog, tree->right);
-					rvar = last_var;
+					strcpy(rvar, last_var);
 				}
 				prog_add_stmt(prog, stmt_init("", OP_UNI_LIST, 3, deco_var(""), lvar, rvar));
 				return prog;

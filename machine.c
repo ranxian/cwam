@@ -22,9 +22,9 @@ char *OP_NAMES(wam_op_t op)
 		"rtry_me_else",
 		"trust_me",
 		"try_me_else",
-		"unification_list",
-		"unification_structrue",
-		"unification_variable"
+		"unify_list",
+		"unify_structrue",
+		"unify_variable"
 	};
 
 	return names[op];

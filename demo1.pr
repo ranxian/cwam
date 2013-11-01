@@ -1,0 +1,8 @@
+boy(bill).
+boy(paul).
+father(alex, bill).
+mother(alice, bill).
+child(X,Y) :- mother(Y,X).
+child(X,Y) :- father(Y,X).
+son(X,Y) :- child(Y,X), boy(X).
+

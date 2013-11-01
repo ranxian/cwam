@@ -3,12 +3,11 @@
 
 char var_prefix;
 
-int main()
+int main(int argc, char *argv[])
 {
 	var_prefix = 'Y';
 	printf("testing program compiler...\n");
-	char *filename = "code.pr";
-	compile_program(filename);
+	compile_program(argv[1]);
 
 	return 0;
 }
