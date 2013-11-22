@@ -3,3 +3,4 @@
 test_compiler
 cscope.out
 test_program_compiler
+test_query_compiler

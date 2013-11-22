@@ -6,23 +6,6 @@
 #include "syntaxtree.h"
 #include "defs.h"
 
-typedef enum {
-	Call_Write,
-	Call_WriteLn,
-	Call_NewLine,
-	Call_Consult,
-	Call_Reconsult,
-	Call_Load,
-	Call_Assert,
-	Call_RetractOne,
-	Call_RetractAll,
-	Call_IsInteger,
-	Call_IsAtom,
-	Call_IsBound,
-	Call_ReadLn,
-	Call_Call
-} call_t;
-
 typedef struct  {
 	stmt_t *stmts[MAX_STATEMENTS_NUM];
 	char labels[MAX_LABEL_NUM][MAX_LABEL_LEN];
