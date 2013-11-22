@@ -180,6 +180,17 @@ int head(toks_t *toks, syn_node_t *tree)
 	tree->type = S_HEAD;
 	int old_idx = push_stat(toks, tree);
 
+	/*
+	if (structure(toks, tree->left)) {
+		free(tree->right), tree->right= NULL;
+		return 1;
+	}
+	toks->idx = old_idx;
+	if (predicate(toks, tree->left)) {
+		free(tree->right), tree->right = NULL;
+		return 1;
+	}
+	*/
 	if (predicate(toks, tree->left)) {
 		if (is_token(toks, "(")) {
 			if (token(toks, "(") && list(toks, tree->right) && token(toks, ")"))
@@ -520,8 +531,7 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 					if (pos > 1) {
 						prog_add_stmt(prog, stmt_init(pred_n->value, OP_RTRY_ME_ELSE, 1, temp));
 					} else {
-						stmt_t *stmt = stmt_init(pred_n->value, OP_TRY_ME_ELSE, 1, temp);
-						prog_add_stmt(prog, stmt);
+						prog_add_stmt(prog, stmt_init(pred_n->value, OP_TRY_ME_ELSE, 1, temp));
 					}
 				} else {
 					prog_add_stmt(prog, stmt_init(pred_n->value, OP_TRUST_ME, 0));
