@@ -28,6 +28,7 @@ int comparator(toks_t *toks, syn_node_t *tree);
 int structure(toks_t *toks, syn_node_t *tree);
 int variable(toks_t *toks, syn_node_t *tree);
 int element(toks_t *toks, syn_node_t *tree);
+int query(toks_t *toks, syn_node_t *tree);
 
 toks_t *toks_init(const char *string);
 int token(toks_t *toks, const char *token);
@@ -44,5 +45,8 @@ prog_t *syn_node_to_prog(syn_node_t *tree);
 
 void compiler_begin();
 void compiler_end();
+
+int compile_program(char *filename);
+int compile_query(char *query);
 
 #endif

@@ -1,6 +1,6 @@
 CC=gcc
 
-OBJS=compiler.o syntaxtree.o program_compiler.o stmt.o kv.o program.o machine.o
+OBJS=compiler.o syntaxtree.o program_compiler.o stmt.o kv.o program.o machine.o query_compiler.o
 
 all: test_compiler test_program_compiler
 
@@ -16,8 +16,11 @@ compiler.o: compiler.c compiler.h kv.h
 syntaxtree.o: syntaxtree.c syntaxtree.h
 	$(CC) -c syntaxtree.c
 
-program_compiler.o: program_compiler.c program_compiler.h
+program_compiler.o: program_compiler.c compiler.h
 	$(CC) -c program_compiler.c
+
+query_compiler.o: compiler.h query_compiler.c
+	$(CC) -c query_compiler.c
 
 stmt.o: stmt.h stmt.c
 	$(CC) -c stmt.c
