@@ -29,7 +29,7 @@ typedef enum wam_op_t {
 
 typedef enum {
 	CALL_CONSULT,
-	CALL_RECONSUL,
+	CALL_RECONSULT,
 	CALL_LOAD,
 	CALL_CALL
 } wam_call_t;
@@ -92,4 +92,12 @@ int is_bound(wam_t *wam, variable_t *var);
 int allocate(wam_t *wam);
 int deallocate(wam_t *wam);
 int call(wam_t *wam, int target);
+
+int wam_backtrack(wam_t *wam);
+int wam_intpred(wam_t *wam, wam_call_t *call);
+int wam_load(wam_t *wam, char *filename);
+int wam_consult(wam_t *wam, char *filename);
+
+int wam_run(wam_t *wam);
+int wam_run_query(wam_t *wam, char *query_str);
 #endif
