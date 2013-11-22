@@ -240,7 +240,7 @@ int condition(toks_t *toks, syn_node_t *tree)
 {
 	tree->type = S_CONDITION;
 	int old_idx = push_stat(toks, tree);
-
+	printf("here");
 	if (predicate(toks, tree->left)) {
 		if (is_token(toks, "(")) {
 			if (token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
@@ -649,5 +649,8 @@ void compiler_begin()
 
 void compiler_end()
 {
+	if (table == NULL) {
+		printf("compiler_end(): wierd, table is NULL.\n");
+	}
 	kv_tbl_destroy(table);
 }

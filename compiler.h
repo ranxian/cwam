@@ -46,7 +46,7 @@ prog_t *syn_node_to_prog(syn_node_t *tree);
 void compiler_begin();
 void compiler_end();
 
-int compile_program(char *filename);
-int compile_query(char *query);
+prog_t *compile_program(char *filename);
+prog_t *compile_query(char *query);
 
 #endif

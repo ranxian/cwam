@@ -65,6 +65,8 @@ void print_node(syn_node_t *node, int indent)
 			printf("NONE\n"); break;
 		case S_STRUCT:
 			printf("STRUCTURE\n"); break;
+		case S_QUERY:
+			printf("QUERY\n"); break;
 		default:
 			printf("UNKNOWN NODE\n");
 	}

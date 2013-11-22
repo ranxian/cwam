@@ -2,13 +2,16 @@ CC=gcc
 
 OBJS=compiler.o syntaxtree.o program_compiler.o stmt.o kv.o program.o machine.o query_compiler.o
 
-all: test_compiler test_program_compiler
+all: test_compiler test_program_compiler test_query_compiler
 
 test_compiler: test_compiler.c $(OBJS)
 	$(CC) -o test_compiler test_compiler.c $(OBJS)
 
 test_program_compiler: test_program_compiler.c $(OBJS)
 	$(CC) -DDEBUG -o test_program_compiler test_program_compiler.c $(OBJS)
+
+test_query_compiler: test_query_compiler.c $(OBJS)
+	$(CC) -o test_query_compiler test_query_compiler.c $(OBJS)
 
 compiler.o: compiler.c compiler.h kv.h
 	$(CC) -c compiler.c

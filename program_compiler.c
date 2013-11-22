@@ -55,8 +55,9 @@ static int preprocess_names(syn_node_t *root)
 	return 0;
 }
 
-prog_t *compile(char *code)
+static prog_t *compile(char *code)
 {
+	compiler_begin();
 	syn_node_t *root = syn_node_init();
 	toks_t *toks = toks_init(code);
 	if (program(toks, root) && toks->idx == toks->len) {
@@ -64,10 +65,12 @@ prog_t *compile(char *code)
 		syn_node_traverse(root);
 		preprocess_names(root);
 	}
+	toks_destroy(toks);
+	compiler_end();
 	return syn_node_to_prog(root);
 }
 
-int compile_program(char *filename)
+prog_t *compile_program(char *filename)
 {
 	FILE *file = fopen(filename, "r");
 
@@ -76,9 +79,7 @@ int compile_program(char *filename)
 	while (fgets(line, MAX_LINE_LEN, file) != NULL) {
 		strcat(buf, line);
 	}
-	prog_t *prog = compile(buf);
-	prog_info(prog);
-	prog_destroy(prog);
 	fclose(file);
-	return 0;
+	prog_t *prog = compile(buf);
+	return prog;
 }
