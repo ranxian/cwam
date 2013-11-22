@@ -31,4 +31,26 @@ typedef enum {
 
 char *OP_NAMES(wam_op_t op);
 
+#ifndef VARIABLE_H
+#define VARIABLE_H
+#include "defs.h"
+typedef enum { REF, CON, LIS, STR } tag_t;
+
+typedef struct cell_t {
+	tag_t tag;
+	char value[MAX_WORD_LEN];
+	struct cell_t *ref;
+	char name[MAX_WORD_LEN];
+} cell_t;
+
+char *TAG_NAMES(tag_t tag);
+cell_t *cell_init_as_unbound(char *name);
+cell_t *cell_init_as_const(char *name, char *value);
+cell_t *cell_init_as_bounded(char *name, cell_t *v);
+int cell_copy(cell_t *src, cell_t *dst);
+cell_t *deref(cell_t *cell);
+void cell_print(cell_t *cell);
+#endif
+
+
 #endif

@@ -33,8 +33,8 @@ static int preprocess_names(syn_node_t *root)
 			prog_n = prog_n->right;
 
 		}
-		prog_n = root;
 
+		prog_n = root;
 		while (prog_n != NULL) {
 			pred_n = prog_n->left->left->left;
 
