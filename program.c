@@ -51,7 +51,7 @@ int prog_add_node(prog_t *prog, syn_node_t *node)
 				prog->nlabel += 1;
 				can_add = 1;
 			}
-		} 
+		}
 		if (can_add) {
 			prog_add_stmt(prog, stmt);
 		}
@@ -79,26 +79,89 @@ int prog_add_stmt_at(prog_t *prog, stmt_t *stmt, int pos)
 	return 0;
 }
 
-int prog_del_from_line(prog_t *prog, int lineno){ return 0; }
+int prog_del_from_line(prog_t *prog, int line)
+{
+	int i;
+	int delcnt = 0;
+	for (i = line; ; i++) {
+		if (prog->stmts[i]->label[0] != 0)
+			break;
+		delcnt += 1;
+	}
+	for (i = line; i < prog->nstmt - delcnt; i++) {
+		prog->stmts[i] = prog->stmts[i+delcnt];
+	}
+	prog->nstmt -= delcnt;
+	return delcnt;
+}
 
-int prog_del_from_label(prog_t *prog, const char *label){ return 0; }
+int prog_del_from_label(prog_t *prog, const char *label)
+{
+	int line = prog_locate_label(prog, label);
+	return prog_del_from_line(prog, line);
+}
 
-int prog_get_last_clause(prog_t *prog, const char *proc_name, int butone){ return 0; }
+int prog_get_last_clause(prog_t *prog, const char *label, int butone)
+{
+	int last2 = -1;
+	int line = prog_locate_label(prog, label);
+	if (line >= 0) {
+		stmt_t *stmt;
+		do {
+			stmt = prog->stmts[line];
+			if (stmt->op == OP_TRY_ME_ELSE || stmt->op == OP_RTRY_ME_ELSE) {
+				last2 = line;
+				line = stmt->jump;
+			} else break;
+		} while (1);
+	}
+	if (butone) return last2;
+	else return line;
+}
 
-int prog_add_clause(prog_t *prog, const char *label, prog_t *adding){ return 0; }
+int prog_add_clause(prog_t *prog, const char *label, prog_t *adding)
+{
+	int line = prog_get_last_clause(prog, label, 0);
+	int cnt = -1;
+	if (line >= 0) {
+		int index = 0;
+		stmt_t *stmt = prog->stmts[line];
+		for (index = 0; stmt->label[index] && stmt->label[index] != '~'; index++)
+			;
+		if (index < strlen(stmt->label)) {
+			char no[16] = {};
+			int i, m = 0;
+			for (i = index + 1; stmt->label[i]; i++)
+				no[m++] = stmt->label[i];
+			no[m] = 0;
+			cnt = atoi(no);
+		} else {
+			cnt = 2;
+		}
+		sprintf(adding->stmts[0]->label, "%s~%d", label, cnt);
+		stmt->op = OP_TRY_ME_ELSE;
+		strcpy(stmt->args[0], adding->stmts[0]->label);
+		stmt->jump = prog->nstmt;
+		prog_add_prog(prog, adding);
+	} else {
+		prog_add_prog(prog, adding);
+		prog_update_label(prog);
+	}
+	return 0;
+}
 
 int prog_locate_label(prog_t *prog, const char *label)
-{ 
+{
 	int i;
 	for (i = 0; i < prog->nlabel; i++) {
-		if (!strcmp(label, prog->labels[i])) 
+		if (!strcmp(label, prog->labels[i]))
 			return i;
 	}
-	return -1; 
+	return -1;
 }
 
 int prog_update_label(prog_t *prog)
-{ 
+{
 	int i;
 	kv_tbl_t *table = kv_tbl_init();
 	for (i = 0; i < prog->nstmt; i++) {
@@ -128,7 +191,7 @@ int prog_update_label(prog_t *prog)
 			}
 		}
 	}
-	return 0; 
+	return 0;
 }
 
 int prog_add_prog(prog_t *prog, prog_t *p)
@@ -147,7 +210,7 @@ int prog_add_prog(prog_t *prog, prog_t *p)
 				prog->nlabel += 1;
 				can_add = 1;
 			}
-		} 
+		}
 		if (can_add) {
 			prog_add_stmt(prog, stmt);
 		}
