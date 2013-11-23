@@ -7,8 +7,8 @@
 prog_t *prog_init()
 {
 	prog_t *prog = malloc(sizeof(prog_t));
-	prog->nlabel = prog->nstmt = 0;
-
+	prog->labels = kv_tbl_init();
+	prog->nstmt = 0;
 	return prog;
 }
 
@@ -24,12 +24,7 @@ void prog_destroy(prog_t *prog)
 
 static int prog_contains_label(prog_t *prog, char *label)
 {
-	int i;
-	for (i = 0; i < prog->nlabel; i++) {
-		if (strcmp(prog->labels[i], label) == 0)
-			return 1;
-	}
-	return 0;
+	return kv_tbl_contains(prog->labels, label);
 }
 
 int prog_add_node(prog_t *prog, syn_node_t *node)
@@ -47,8 +42,7 @@ int prog_add_node(prog_t *prog, syn_node_t *node)
 			if (prog_contains_label(prog, label)) {
 				can_add = 0;
 			} else {
-				strcpy(prog->labels[prog->nlabel], label);
-				prog->nlabel += 1;
+				kv_tbl_insert(prog->labels, label, prog->nstmt, NULL);
 				can_add = 1;
 			}
 		}
@@ -95,13 +89,13 @@ int prog_del_from_line(prog_t *prog, int line)
 	return delcnt;
 }
 
-int prog_del_from_label(prog_t *prog, const char *label)
+int prog_del_from_label(prog_t *prog, char *label)
 {
 	int line = prog_locate_label(prog, label);
 	return prog_del_from_line(prog, line);
 }
 
-int prog_get_last_clause(prog_t *prog, const char *label, int butone)
+int prog_get_last_clause(prog_t *prog, char *label, int butone)
 {
 	int last2 = -1;
 	int line = prog_locate_label(prog, label);
@@ -119,7 +113,7 @@ int prog_get_last_clause(prog_t *prog, const char *label, int butone)
 	else return line;
 }
 
-int prog_add_clause(prog_t *prog, const char *label, prog_t *adding)
+int prog_add_clause(prog_t *prog, char *label, prog_t *adding)
 {
 	int line = prog_get_last_clause(prog, label, 0);
 	int cnt = -1;
@@ -150,14 +144,12 @@ int prog_add_clause(prog_t *prog, const char *label, prog_t *adding)
 	return 0;
 }
 
-int prog_locate_label(prog_t *prog, const char *label)
+int prog_locate_label(prog_t *prog, char *label)
 {
-	int i;
-	for (i = 0; i < prog->nlabel; i++) {
-		if (!strcmp(label, prog->labels[i]))
-			return i;
-	}
-	return -1;
+	kv_t *kv = kv_tbl_lookup(prog->labels, label);
+	if (kv == NULL)
+		return -1;
+	else return kv->intval;
 }
 
 int prog_update_label(prog_t *prog)
@@ -206,8 +198,7 @@ int prog_add_prog(prog_t *prog, prog_t *p)
 			if (prog_contains_label(prog, label)) {
 				can_add = 0;
 			} else {
-				strcpy(prog->labels[prog->nlabel], label);
-				prog->nlabel += 1;
+				kv_tbl_insert(prog->labels, label, prog->nstmt, NULL);
 				can_add = 1;
 			}
 		}

@@ -53,10 +53,41 @@ int proceed(wam_t *wam) { return 0; }
 int is_bound(wam_t *wam, var_t *var) { return 0; }
 int allocate(wam_t *wam) { return 0; }
 int deallocate(wam_t *wam) { return 0; }
-int call(wam_t *wam, int target) { return 0; }
+
+int call(wam_t *wam, int target)
+{
+	if (target >= 0) {
+		wam->ctnptr = wam->pc + 1;
+		wam->pc = target;
+	} else {
+		if (!wam_intpred(wam, target))
+			wam_backtrack(wam);
+	}
+	return 0;
+}
 
 int wam_backtrack(wam_t *wam) { return 0; }
-int wam_intpred(wam_t *wam, int call) { return 0; }
+int wam_intpred(wam_t *wam, int call)
+{
+	int result = 1;
+	var_t *v = wam->args[0];
+	switch (call) {
+		case CALL_CALL:
+		{
+			var_t *v2 = deref(v);
+			int intg;
+			int target = -1;
+			if (v2->tag == CON) {
+
+			}
+			break;
+		}
+		case CALL_LOAD: break;
+		case CALL_CONSULT: break;
+		case CALL_RECONSULT: break;
+	}
+	return 0;
+}
 int wam_load(wam_t *wam, char *filename) { return 0; }
 int wam_consult(wam_t *wam, char *filename) { return 0; }
 
@@ -66,8 +97,9 @@ int wam_run_query(wam_t *wam, char *query_str)
 		return 0;
 	} else if (!strcmp(query_str, "labels.")) {
 		int i;
-		for (i = 0; i < wam->prog->nlabel; i++)
-			printf("%s\n", wam->prog->labels[i]);
+		for (i = 0; i < wam->prog->nstmt; i++)
+			if (wam->prog->stmts[i]->label[0])
+				printf("%s\n", wam->prog->stmts[i]->label);
 		return 1;
 	} else if (!strcmp(query_str, "procedures.")) {
 		int i;
@@ -139,10 +171,14 @@ int wam_run(wam_t *wam)
 {
 	wam->failed = 1;
 	wam->opcnt = 0;
-	while (wam->pc > 0) {
+	wam->bpcnt = 0;
+
+	while (wam->pc >= 0) {
+		getchar();
 		wam->failed = 0;
 		stmt_t *stmt = wam->prog->stmts[wam->pc];
 		printf("PC: %d, stmt: %s\n", wam->pc, stmt->label);
+		stmt_info(stmt);
 		if (wam->opcnt > wam->maxopcnt) {
 			printf("panic: maximum opcnt reached\n");
 			wam->failed = 1;

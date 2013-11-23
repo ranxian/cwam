@@ -43,7 +43,9 @@ typedef struct {
 	int narg;
 	int nqvar;
 	int opcnt;
+	int bpcnt;
 	int maxopcnt;
+	int ctnptr;
 } wam_t;
 
 wam_t *wam_init(prog_t *prog);
