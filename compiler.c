@@ -120,15 +120,12 @@ int program(toks_t *toks, syn_node_t *tree)
 }
 int predicate(toks_t *toks, syn_node_t *tree)
 {
-	printf("test predicate: %s\n", CUR_TOK(toks));
 	if (is_predicate(CUR_TOK(toks))) {
 		tree->type = S_PREDICATE;
 		tree->left = tree->right = NULL;
 		strcpy(tree->value, CUR_TOK(toks));
 		printf("%s\n", tree->value);
 		toks->idx += 1;
-		printf("0x%x; 0x%x\n", (int)tree->left, (int)tree->right);
-		syn_node_traverse(tree);
 		return 1;
 	}
 	return 0;
@@ -204,7 +201,6 @@ int body(toks_t *toks, syn_node_t *tree)
 				return 1;
 		} else {
 			free(tree->right), tree->right = NULL;
-			syn_node_traverse(tree);
 			return 1;
 		}
 	}
@@ -240,13 +236,9 @@ int condition(toks_t *toks, syn_node_t *tree)
 {
 	tree->type = S_CONDITION;
 	int old_idx = push_stat(toks, tree);
-	printf("here");
 	if (predicate(toks, tree->left)) {
 		if (is_token(toks, "(")) {
 			if (token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
-				printf("long condition passed\n");
-				printf("%d\n", tree->right->type);
-				syn_node_traverse(tree->left);
 				return 1;
 			}
 		} else {
@@ -295,12 +287,10 @@ int structure(toks_t *toks, syn_node_t *tree)
 	int old_idx = push_stat(toks, tree);
 
 	if (predicate(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
-		syn_node_traverse(tree);
 	   	return 1;
 	}
 	toks->idx = old_idx;
 	if (variable(toks, tree->left) && token(toks, "(") && list(toks, tree->right) && token(toks, ")")) {
-		syn_node_traverse(tree);
 		return 1;
 	}
 
@@ -596,8 +586,10 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 			break;
 		case S_CLAUSE:
 			{
-				if (table != NULL)
+				if (table != NULL) {
 					kv_tbl_destroy(table);
+					table = NULL;
+				}
 				table = kv_tbl_init();
 				body_calls = 0;
 
@@ -651,6 +643,6 @@ void compiler_end()
 {
 	if (table == NULL) {
 		printf("compiler_end(): wierd, table is NULL.\n");
+		return;
 	}
-	kv_tbl_destroy(table);
 }

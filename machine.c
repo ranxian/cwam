@@ -1,7 +1,9 @@
 #include "machine.h"
 #include "stmt.h"
+#include "compiler.h"
 #include <stdio.h>
-
+#include <string.h>
+#define STREQL(s1, s2) (strcmp(s1, s2) == 0)
 char *OP_NAMES(wam_op_t op)
 {
 	static char *names[] = 
@@ -58,7 +60,28 @@ int wam_intpred(wam_t *wam, wam_call_t *call) { return 0; }
 int wam_load(wam_t *wam, char *filename) { return 0; }
 int wam_consult(wam_t *wam, char *filename) { return 0; }
 
-int wam_run_query(wam_t *wam, char *query_str) { return 1; }
+int wam_run_query(wam_t *wam, char *query_str) 
+{
+	if (!strcmp(query_str, "quit.")) {
+
+	} else if (!strcmp(query_str, "labels.")) {
+
+
+	} else if (!strcmp(query_str, "procedures.")) {
+
+		
+	} else if (!strcmp(query_str, "list.")) {
+	} else if (!strcmp(query_str, "help.")) {
+		printf("sorry there is no help.\n");	
+	}
+
+	compiler_begin();
+	prog_t *prog = compile_query(query_str);
+	prog_info(prog);
+	compiler_end();
+
+	return 0;
+}
 
 wam_t *wam_init(prog_t *prog) { return NULL; }
 

@@ -41,7 +41,6 @@ prog_t *compile_query(char *query_str)
 			syn_node_destroy(root);
 			return NULL;
 		}
-		syn_node_traverse(root);
 		prog = syn_node_to_prog(root);
 	}
 

@@ -62,7 +62,6 @@ static prog_t *compile(char *code)
 	toks_t *toks = toks_init(code);
 	if (program(toks, root) && toks->idx == toks->len) {
 		printf("program compile success.\n");
-		syn_node_traverse(root);
 		preprocess_names(root);
 	}
 	toks_destroy(toks);

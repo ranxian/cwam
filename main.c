@@ -2,10 +2,12 @@
 #include "defs.h"
 #include "program.h"
 #include <stdio.h>
+#include <string.h>
 char var_prefix = 'Q';
 
 int main()
 {
+	int i;
 	char line[MAX_LINE_LEN];
 	char *p;
 	printf("This is XR's prolog interpreter\n");
@@ -14,6 +16,10 @@ int main()
 	do {
 		printf("?- ");
 		p = fgets(line, MAX_LINE_LEN, stdin);
-	} while (p != NULL && wam_run_query(wam, p));
+		if (p) {
+			for (i = strlen(p); i >= 0; i--)
+				if (p[i] == '\n') p[i] = 0;
+		}
+	} while (p != NULL && wam_run_query(wam, p) >= 0);
 	printf("Bye.\n");
 }
