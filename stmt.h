@@ -1,7 +1,6 @@
 #ifndef STMT_H
 #define STMT_H
 
-#include "machine.h"
 #include "defs.h"
 #include "stdarg.h"
 #include <stdlib.h>

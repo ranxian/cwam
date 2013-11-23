@@ -7,4 +7,34 @@
 #define MAX_PROGRAM_LEN 1024
 #define MAX_LABEL_NUM 256
 
+typedef enum wam_op_t {
+	OP_ALLOC,
+	OP_DEALLOC,
+	OP_CALL,
+	OP_NOT_CALL,
+	OP_CREATE_VAR,
+	OP_GET_CONST,
+   	OP_GET_VAL,
+	OP_GET_VAR,
+	OP_PUT_VAL,
+	OP_PUT_VAR,
+	OP_PUT_CONST,
+	OP_HALT,
+	OP_NOOP,
+	OP_PROCEED,
+	OP_RTRY_ME_ELSE,
+	OP_TRUST_ME,
+	OP_TRY_ME_ELSE,
+	OP_UNI_LIST,
+	OP_UNI_STRUC,
+	OP_UNI_VAR
+} wam_op_t;
+
+typedef enum {
+	CALL_CONSULT,
+	CALL_RECONSULT,
+	CALL_LOAD,
+	CALL_CALL
+} wam_call_t;
+
 #endif

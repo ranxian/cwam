@@ -1,3 +1,0 @@
-male(john).
-male(william).
-son(X,Y) :- father(Y,X).

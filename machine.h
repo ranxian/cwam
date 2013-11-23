@@ -1,38 +1,8 @@
 #ifndef MACHINE_H
 #define MACHINE_H
 #include "defs.h"
+#include "program.h"
 #define MAX_VAR_CNT 256
-struct prog_t;
-typedef enum wam_op_t {
-	OP_ALLOC,
-	OP_DEALLOC,
-	OP_CALL,
-	OP_NOT_CALL,
-	OP_CREATE_VAR,
-	OP_GET_CONST,
-   	OP_GET_VAL,
-	OP_GET_VAR,
-	OP_GET_LVL,
-	OP_PUT_VAL,
-	OP_PUT_VAR,
-	OP_PUT_CONST,
-	OP_HALT,
-	OP_NOOP,
-	OP_PROCEED,
-	OP_RTRY_ME_ELSE,
-	OP_TRUST_ME,
-	OP_TRY_ME_ELSE,
-	OP_UNI_LIST,
-	OP_UNI_STRUC,
-	OP_UNI_VAR
-} wam_op_t;
-
-typedef enum {
-	CALL_CONSULT,
-	CALL_RECONSULT,
-	CALL_LOAD,
-	CALL_CALL
-} wam_call_t;
 
 char *OP_NAMES(wam_op_t op);
 
@@ -55,33 +25,49 @@ void variable_print(variable_t *variable);
 
 typedef struct environ_t {
 	variable_t *variables[MAX_VAR_CNT];
-	struct environ_t *last_env;
+	struct environ_t *lastenv;
 	int retA;
 } environ_t;
 
-environ_t *env_init(int retA, environ_t *last_env);
+environ_t *env_init(int retA, environ_t *lastenv);
 
+struct choicepoint_t;
 typedef struct {
-	struct prog_t *p;
+	prog_t *p;
+	struct choicepoint_t *cp;
 	int failed;
 	int pc;
 	environ_t *env;
 	variable_t *args[MAX_VAR_CNT];
 	variable_t *qvars[MAX_VAR_CNT];
+	int opcnt;
+	int maxopcnt;
 } wam_t;
 
-wam_t *wam_init(struct prog_t *prog);
-int wam_rest(wam_t *wam);
+wam_t *wam_init(prog_t *prog);
 variable_t *wam_get_ref(wam_t *wam, char *name);
+
+typedef struct choicepoint_t {
+	variable_t *args;
+	environ_t *lastenv;
+	int retA;
+	struct choicepoint_t *lastcp;
+	int nextclause;
+	int trailptr;
+} choicepoint_t;
+
+choicepoint_t *cp_init(variable_t *args, int trailptr, int retA);
 // byte code interpretation begins
 
 int create_variable(wam_t *wam, char *regname, char *varname);
 int get_variable(wam_t *wam, char *regname1, char *regname2);
 int get_constant(wam_t *wam, char *constname, char *regname);
+int get_value(wam_t *wam, char *regname, char* valname);
 int unify_variable2(wam_t *wam, variable_t *v1, variable_t *v2);
 int unify_struc2(wam_t *wam, variable_t *struc, variable_t *head, variable_t* tail);
-int unify_variable(wam_t *wam, variable_t *v1, variable_t *v2);
-int unify_struc(wam_t *wam, variable_t *struc, variable_t *head, variable_t* tail);
+int unify_variable(wam_t *wam, char *v1name, char *v2name);
+int unify_struc(wam_t *wam,char *strucname, char *headname, char* tailname);
+int unify_list(wam_t *wam, char *listname, char *headname, char *tailname);
 int put_constant(wam_t *wam, char *constname, char *regname);
 int put_list(wam_t *wam, char *headname, char *tailname, char *argname);
 int put_value(wam_t *wam, char *varname, char *argname);
@@ -93,6 +79,7 @@ int allocate(wam_t *wam);
 int deallocate(wam_t *wam);
 int call(wam_t *wam, int target);
 
+int wam_reset(wam_t *wam);
 int wam_backtrack(wam_t *wam);
 int wam_intpred(wam_t *wam, wam_call_t *call);
 int wam_load(wam_t *wam, char *filename);

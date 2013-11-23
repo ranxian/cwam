@@ -1,4 +1,5 @@
 #include "stmt.h"
+#include "machine.h"
 #include <string.h>
 #include <stdio.h>
 
