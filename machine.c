@@ -53,8 +53,8 @@ int proceed(wam_t *wam) { return 0; }
 int is_bound(wam_t *wam, var_t *var) { return 0; }
 int allocate(wam_t *wam) { return 0; }
 int deallocate(wam_t *wam) { return 0; }
-
-int call(wam_t *wam, int target)
+char *var_info(var_t *var) { return NULL; }
+int wam_call(wam_t *wam, int target)
 {
 	if (target >= 0) {
 		wam->ctnptr = wam->pc + 1;
@@ -66,30 +66,78 @@ int call(wam_t *wam, int target)
 	return 0;
 }
 
-int wam_backtrack(wam_t *wam) { return 0; }
+int wam_backtrack(wam_t *wam)
+{
+	int i;
+	wam->ctnptr++;
+	wam->failed = 1;
+	if (wam->cp != NULL) {
+		wam->ctnptr = wam->cp->retA;
+		wam->pc = wam->cp->nextclause;
+		wam->env = wam->cp->lastenv;
+		memcpy(wam->args, wam->cp->args, sizeof(wam->args));
+		wam->cp = wam->cp->lastcp;
+	} else {
+		wam->pc -= 1;
+	}
+	return 0;
+}
 int wam_intpred(wam_t *wam, int call)
 {
+	prog_t *prog = wam->prog;
 	int result = 1;
 	var_t *v = wam->args[0];
 	switch (call) {
 		case CALL_CALL:
 		{
 			var_t *v2 = deref(v);
-			int intg;
 			int target = -1;
 			if (v2->tag == CON) {
-
+				kv_t *kv = kv_tbl_lookup(prog->labels, v2->value);
+				if (kv != NULL)
+					target = kv->intval;
+			} else if (v2->tag == STR) {
+				kv_t *kv = kv_tbl_lookup(prog->labels, v2->head->value);
+				if (kv != NULL) {
+					target = kv->intval;
+					var_t *tail = v2->tail;
+					int cnt = 0;
+					while (tail != NULL) {
+						char temp[64];
+						sprintf(temp, "A%d", cnt);
+						var_t *v3 = wam_get_ref(wam, temp);
+						v3->tag = REF;
+						v3->ref = tail->head;
+						cnt++;
+						tail = tail->tail;
+					}
+				}
 			}
+			if (target >= 0)
+				wam_call(wam, target);
+			else
+				wam_backtrack(wam);
 			break;
 		}
-		case CALL_LOAD: break;
-		case CALL_CONSULT: break;
-		case CALL_RECONSULT: break;
+		case CALL_CONSULT: wam_consult(wam, var_info(v)); break;
+		default: result = 0; break;
+	}
+	return result;
+}
+
+int wam_consult(wam_t *wam, char *filename)
+{
+	prog_t *prog = compile_program(filename);
+	if (prog == NULL)
+		wam_backtrack(wam);
+	else {
+		prog_info(prog);
+		prog_add_prog(wam->prog, prog);
+		prog_update_label(wam->prog);
+		wam->pc += 1;
 	}
 	return 0;
 }
-int wam_load(wam_t *wam, char *filename) { return 0; }
-int wam_consult(wam_t *wam, char *filename) { return 0; }
 
 int wam_run_query(wam_t *wam, char *query_str)
 {
@@ -151,6 +199,10 @@ wam_t *wam_init(prog_t *prog)
 	return wam;
 }
 
+var_t *wam_get_ref(wam_t *wam, char *name) {
+	return NULL;
+}
+
 environ_t *env_init(int retA, environ_t *lastenv)
 {
 	environ_t *env = malloc(sizeof(environ_t));
@@ -191,7 +243,7 @@ int wam_run(wam_t *wam)
 			case OP_DEALLOC:
 				deallocate(wam); break;
 			case OP_CALL:
-				call(wam, stmt->jump); break;
+				wam_call(wam, stmt->jump); break;
 			case OP_CREATE_VAR:
 				create_variable(wam, stmt->args[0], stmt->args[1]); break;
 			case OP_GET_CONST:

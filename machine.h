@@ -11,7 +11,7 @@ typedef enum { REF, CON, LIS, STR } tag_t;
 typedef struct var_t {
 	tag_t tag;
 	char value[MAX_WORD_LEN];
-	struct var_t *ref;
+	struct var_t *ref, *head, *tail;
 	char name[MAX_WORD_LEN];
 } var_t;
 
@@ -22,6 +22,8 @@ var_t *var_init_as_bounded(char *name, var_t *v);
 int var_copy(var_t *src, var_t *dst);
 var_t *deref(var_t *var);
 void var_print(var_t *var);
+char *var_info(var_t *var);
+static char tempstr[64];
 
 typedef struct environ_t {
 	var_t *vars[MAX_VAR_CNT];
@@ -81,12 +83,12 @@ int proceed(wam_t *wam);
 int is_bound(wam_t *wam, var_t *var);
 int allocate(wam_t *wam);
 int deallocate(wam_t *wam);
-int call(wam_t *wam, int target);
+// is not normal
+int wam_call(wam_t *wam, int target);
 
 int wam_reset(wam_t *wam);
 int wam_backtrack(wam_t *wam);
 int wam_intpred(wam_t *wam, int call);
-int wam_load(wam_t *wam, char *filename);
 int wam_consult(wam_t *wam, char *filename);
 
 int wam_run(wam_t *wam);
