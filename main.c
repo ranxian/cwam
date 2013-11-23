@@ -20,6 +20,6 @@ int main()
 			for (i = strlen(p); i >= 0; i--)
 				if (p[i] == '\n') p[i] = 0;
 		}
-	} while (p != NULL && wam_run_query(wam, p) >= 0);
+	} while (p != NULL && wam_run_query(wam, p));
 	printf("Bye.\n");
 }

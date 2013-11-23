@@ -3,6 +3,7 @@
 #include "compiler.h"
 #include <stdio.h>
 #include <string.h>
+#include "helper.h"
 #define STREQL(s1, s2) (strcmp(s1, s2) == 0)
 char *OP_NAMES(wam_op_t op)
 {
@@ -61,17 +62,27 @@ int wam_consult(wam_t *wam, char *filename) { return 0; }
 
 int wam_run_query(wam_t *wam, char *query_str)
 {
-	if (!strcmp(query_str, "quit.")) {
-
+	if (!strcmp(query_str, "quit.") || !strcmp(query_str, "exit.")) {
+		return 0;
 	} else if (!strcmp(query_str, "labels.")) {
-
-
+		int i;
+		for (i = 0; i < wam->prog->nlabel; i++)
+			printf("%s\n", wam->prog->labels[i]);
+		return 1;
 	} else if (!strcmp(query_str, "procedures.")) {
-
-
+		int i;
+		for (i = 0; i < wam->prog->nstmt; i++) {
+			char *label = wam->prog->stmts[i]->label;
+			if (strlen(label) > 0 && indexof(label, '~') < 0)
+				printf("%s\n", label);
+		}
+		return 1;
 	} else if (!strcmp(query_str, "list.")) {
+		prog_info(wam->prog);
+		return 1;
 	} else if (!strcmp(query_str, "help.")) {
 		printf("sorry there is no help.\n");
+		return 1;
 	}
 
 	prog_t *prog = compile_query(query_str);
@@ -98,7 +109,7 @@ int wam_run_query(wam_t *wam, char *query_str)
 	}
 
 	wam_reset(wam);
-	return 0;
+	return 1;
 }
 
 wam_t *wam_init(prog_t *prog)

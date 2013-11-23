@@ -1,6 +1,7 @@
 CC=gcc
 
-OBJS=compiler.o syntaxtree.o program_compiler.o stmt.o kv.o program.o machine.o query_compiler.o variable.o
+OBJS=compiler.o syntaxtree.o program_compiler.o stmt.o kv.o program.o \
+	 machine.o query_compiler.o variable.o helper.o
 
 all: cwam test_compiler test_program_compiler test_query_compiler
 
@@ -42,6 +43,9 @@ machine.o: machine.h machine.c
 
 variable.o: machine.h variable.c
 	$(CC) -c variable.c
+
+helper.o: helper.h helper.c
+	$(CC) -c helper.c
 
 clean:
 	rm -rf *.~ *.o
