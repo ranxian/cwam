@@ -35,5 +35,7 @@ int prog_update_label(prog_t *prog);
 
 int prog_add_node(prog_t *prog, syn_node_t *node);
 
+int prog_add_prog(prog_t *prog, prog_t *p);
+
 void prog_info(prog_t *prog);
 #endif

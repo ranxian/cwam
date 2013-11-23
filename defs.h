@@ -30,11 +30,8 @@ typedef enum wam_op_t {
 	OP_UNI_VAR
 } wam_op_t;
 
-typedef enum {
-	CALL_CONSULT,
-	CALL_RECONSULT,
-	CALL_LOAD,
-	CALL_CALL
-} wam_call_t;
-
+#define CALL_CONSULT  	-1
+#define CALL_RECONSULT 	-2
+#define CALL_LOAD		-3
+#define CALL_CALL		-4
 #endif

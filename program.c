@@ -1,5 +1,6 @@
 #include "program.h"
 #include "compiler.h"
+#include "kv.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -45,13 +46,12 @@ int prog_add_node(prog_t *prog, syn_node_t *node)
 		if (strlen(label) > 0) {
 			if (prog_contains_label(prog, label)) {
 				can_add = 0;
-				break;
+			} else {
+				strcpy(prog->labels[prog->nlabel], label);
+				prog->nlabel += 1;
+				can_add = 1;
 			}
-		} else {
-			strcpy(prog->labels[prog->nlabel], label);
-			prog->nlabel += 1;
-			can_add = 1;
-		}
+		} 
 		if (can_add) {
 			prog_add_stmt(prog, stmt);
 		}
@@ -87,9 +87,74 @@ int prog_get_last_clause(prog_t *prog, const char *proc_name, int butone){ retur
 
 int prog_add_clause(prog_t *prog, const char *label, prog_t *adding){ return 0; }
 
-int prog_locate_label(prog_t *prog, const char *label){ return 0; }
+int prog_locate_label(prog_t *prog, const char *label)
+{ 
+	int i;
+	for (i = 0; i < prog->nlabel; i++) {
+		if (!strcmp(label, prog->labels[i])) 
+			return i;
+	}
+	return -1; 
+}
 
-int prog_update_label(prog_t *prog){ return 0; }
+int prog_update_label(prog_t *prog)
+{ 
+	int i;
+	kv_tbl_t *table = kv_tbl_init();
+	for (i = 0; i < prog->nstmt; i++) {
+		if (prog->stmts[i]->label[0]) { // has a label
+			kv_tbl_insert(table, prog->stmts[i]->label, i, NULL);
+		}
+	}
+
+	for (i = 0; i < prog->nstmt; i++) {
+		stmt_t *stmt = prog->stmts[i];
+		if (stmt->op == OP_CALL || stmt->op == OP_RTRY_ME_ELSE ||
+			stmt->op == OP_TRY_ME_ELSE || stmt->op == OP_NOT_CALL) {
+			char *label = stmt->args[0];
+			stmt->jump = -1;
+			if (kv_tbl_contains(table, label)) {
+				stmt->jump = kv_tbl_lookup(table, label)->intval;
+			} else {
+				if (!strcmp(label, "call")) {
+					stmt->jump = CALL_CALL;
+				} else if (!strcmp(label, "consult")) {
+					stmt->jump = CALL_CONSULT;
+				} else if (!strcmp(label, "reconsult")) {
+					stmt->jump = CALL_RECONSULT;
+				} else if (!strcmp(label, "load")) {
+					stmt->jump = CALL_LOAD;
+				}
+			}
+		}
+	}
+	return 0; 
+}
+
+int prog_add_prog(prog_t *prog, prog_t *p)
+{
+	int can_add = 1;
+	int i;
+
+	for (i = 0; i < p->nstmt; i++) {
+		stmt_t *stmt = p->stmts[i];
+		char *label = stmt->label;
+		if (strlen(label) > 0) {
+			if (prog_contains_label(prog, label)) {
+				can_add = 0;
+			} else {
+				strcpy(prog->labels[prog->nlabel], label);
+				prog->nlabel += 1;
+				can_add = 1;
+			}
+		} 
+		if (can_add) {
+			prog_add_stmt(prog, stmt);
+		}
+	}
+
+	return 0;
+}
 
 void prog_info(prog_t *prog)
 {

@@ -6,7 +6,7 @@
 #define STREQL(s1, s2) (strcmp(s1, s2) == 0)
 char *OP_NAMES(wam_op_t op)
 {
-	static char *names[] = 
+	static char *names[] =
 	{
 		"allocate",
 		"deallocate",
@@ -38,8 +38,8 @@ int create_variable(wam_t *wam, char *regname, char *varname) { return 0; }
 int get_variable(wam_t *wam, char *regname1, char *regname2) { return 0; }
 int get_constant(wam_t *wam, char *constname, char *regname) { return 0; }
 int get_value(wam_t *wam, char *regname, char* valname) { return 0; }
-int unify_variable2(wam_t *wam, variable_t *v1, variable_t *v2) { return 0; }
-int unify_struc2(wam_t *wam, variable_t *struc, variable_t *head, variable_t* tail) { return 0; }
+int unify_variable2(wam_t *wam, var_t *v1, var_t *v2) { return 0; }
+int unify_struc2(wam_t *wam, var_t *struc, var_t *head, var_t* tail) { return 0; }
 int unify_variable(wam_t *wam, char *v1name, char *v2name) { return 0; }
 int unify_struc(wam_t *wam,char *strucname, char *headname, char* tailname) { return 0; }
 int unify_list(wam_t *wam, char *listname, char *headname, char *tailname) { return 0; }
@@ -49,18 +49,17 @@ int put_value(wam_t *wam, char *varname, char *argname) { return 0; }
 int put_variable(wam_t *wam, char *varname, char *argname) { return 0; }
 int try_me_else(wam_t *wam, int next) { return 0; }
 int proceed(wam_t *wam) { return 0; }
-int is_bound(wam_t *wam, variable_t *var) { return 0; }
+int is_bound(wam_t *wam, var_t *var) { return 0; }
 int allocate(wam_t *wam) { return 0; }
 int deallocate(wam_t *wam) { return 0; }
 int call(wam_t *wam, int target) { return 0; }
 
-int wam_reset(wam_t *wam) { return 0; }
 int wam_backtrack(wam_t *wam) { return 0; }
-int wam_intpred(wam_t *wam, wam_call_t *call) { return 0; }
+int wam_intpred(wam_t *wam, int call) { return 0; }
 int wam_load(wam_t *wam, char *filename) { return 0; }
 int wam_consult(wam_t *wam, char *filename) { return 0; }
 
-int wam_run_query(wam_t *wam, char *query_str) 
+int wam_run_query(wam_t *wam, char *query_str)
 {
 	if (!strcmp(query_str, "quit.")) {
 
@@ -69,21 +68,61 @@ int wam_run_query(wam_t *wam, char *query_str)
 
 	} else if (!strcmp(query_str, "procedures.")) {
 
-		
+
 	} else if (!strcmp(query_str, "list.")) {
 	} else if (!strcmp(query_str, "help.")) {
-		printf("sorry there is no help.\n");	
+		printf("sorry there is no help.\n");
 	}
 
-	compiler_begin();
 	prog_t *prog = compile_query(query_str);
 	prog_info(prog);
-	compiler_end();
 
+	prog_add_prog(wam->prog, prog);
+	prog_update_label(prog);
+
+	wam->pc = prog_locate_label(prog, "query$");
+	printf("pc: %d\n", wam->pc);
+
+	wam_run(wam);
+
+	if (wam->failed) {
+		printf("failed.\n");
+	} else {
+		printf("success.\n");
+		int i;
+		for (i = 0; i < wam->nqvar; i++) {
+			printf("%s=\n", wam->qvars[i]->name);
+			var_print(wam->qvars[i]);
+			printf("\n");
+		}
+	}
+
+	wam_reset(wam);
 	return 0;
 }
 
-wam_t *wam_init(prog_t *prog) { return NULL; }
+wam_t *wam_init(prog_t *prog)
+{
+	wam_t *wam = malloc(sizeof(wam_t));
+	wam->prog = prog;
+	return wam;
+}
+
+environ_t *env_init(int retA, environ_t *lastenv)
+{
+	environ_t *env = malloc(sizeof(environ_t));
+	env->retA = retA;
+	env->lastenv  = lastenv;
+	return env;
+}
+
+int wam_reset(wam_t *wam) {
+	wam->narg = 0;
+	wam->nqvar = 0;
+	wam->env = env_init(99999999, NULL);
+	wam->cp = NULL;
+	return 0;
+}
 
 int wam_run(wam_t *wam)
 {
@@ -91,7 +130,7 @@ int wam_run(wam_t *wam)
 	wam->opcnt = 0;
 	while (wam->pc > 0) {
 		wam->failed = 0;
-		stmt_t *stmt = wam->p->stmts[wam->pc];
+		stmt_t *stmt = wam->prog->stmts[wam->pc];
 		printf("PC: %d, stmt: %s\n", wam->pc, stmt->label);
 		if (wam->opcnt > wam->maxopcnt) {
 			printf("panic: maximum opcnt reached\n");
