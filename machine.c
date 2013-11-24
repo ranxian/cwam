@@ -35,24 +35,206 @@ char *OP_NAMES(wam_op_t op)
 	return names[op];
 }
 
-int create_variable(wam_t *wam, char *regname, char *varname) { return 0; }
-int get_variable(wam_t *wam, char *regname1, char *regname2) { return 0; }
-int get_constant(wam_t *wam, char *constname, char *regname) { return 0; }
-int get_value(wam_t *wam, char *regname, char* valname) { return 0; }
-int unify_variable2(wam_t *wam, var_t *v1, var_t *v2) { return 0; }
-int unify_struc2(wam_t *wam, var_t *struc, var_t *head, var_t* tail) { return 0; }
-int unify_variable(wam_t *wam, char *v1name, char *v2name) { return 0; }
-int unify_struc(wam_t *wam,char *strucname, char *headname, char* tailname) { return 0; }
-int unify_list(wam_t *wam, char *listname, char *headname, char *tailname) { return 0; }
-int put_constant(wam_t *wam, char *constname, char *regname) { return 0; }
-int put_list(wam_t *wam, char *headname, char *tailname, char *argname) { return 0; }
-int put_value(wam_t *wam, char *varname, char *argname) { return 0; }
-int put_variable(wam_t *wam, char *varname, char *argname) { return 0; }
-int try_me_else(wam_t *wam, int next) { return 0; }
-int proceed(wam_t *wam) { return 0; }
-int is_bound(wam_t *wam, var_t *var) { return 0; }
-int allocate(wam_t *wam) { return 0; }
-int deallocate(wam_t *wam) { return 0; }
+int create_variable(wam_t *wam, char *regname, char *varname)
+{
+	if (varname[0] != '_') {
+		var_t *q = wam_get_ref(wam, regname);
+		strcpy(q->name, varname);
+		char *num = substr(varname, 1, strlen(varname) - 1);
+		q->display = 1;
+	}
+	wam->pc += 1;
+	return 0;
+}
+int get_variable(wam_t *wam, char *regname1, char *regname2)
+{
+	var_t *vn = wam_get_ref(wam, regname1);
+	var_t *Ai = wam_get_ref(wam, regname2);
+	var_copy(vn, Ai);
+	return 0;
+}
+int get_constant(wam_t *wam, char *constname, char *regname)
+{
+	var_t *v = deref(wam_get_ref(wam, regname));
+	int failed = 1;
+	if (v->tag == REF) {
+		v->tag = CON;
+		strcpy(v->value, constname);
+		failed = 0;
+	} else if (v->tag == CON) {
+		if (strcpy(constname, v->value) == 0)
+			failed = 0;
+	}
+	if (failed)
+		wam_backtrack(wam);
+	else
+		wam->pc += 1;
+	return 0;
+}
+int get_value(wam_t *wam, char *regname, char* valname)
+{
+	unify_variable(wam, valname, regname);
+	return 0;
+}
+int unify_variable2(wam_t *wam, var_t *v1, var_t *v2)
+{
+	if (v1 == NULL || v2 == NULL) return 0;
+	v1 = deref(v1);
+	v2 = deref(v2);
+	if (v1 == v2) return 1;
+
+	if (v1->tag == REF) {
+		var_copy(v1, v2);
+		return 1;
+	}
+
+	if (v2->tag == REF) {
+		var_copy(v2, v1);
+		return 1;
+	}
+
+	if (v1->tag == CON && v2->tag == CON) {
+		if (strcmp(v1->value, v2->value) == 0)
+			return 1;
+		else
+			return 0;
+	}
+
+	if ((v1->tag == LIS && v2->tag == LIS) ||
+			v1->tag == STR && v2->tag == STR) {
+		if (unify_variable2(wam, v1->head, v2->head) &&
+				unify_variable2(wam, v1->tail, v2->tail))
+			return 1;
+	}
+   	return 0;
+}
+int unify_struc2(wam_t *wam, var_t *struc, var_t *head, var_t* tail)
+{
+	if (struc->tag == REF) {
+		struc->tag == STR;
+		struc->head = head;
+		struc->tail = tail;
+		return 1;
+	}
+	if (struc->tag == STR) {
+		if (unify_variable2(wam, head, struc->head))
+			if (unify_variable2(wam, tail, struc->tail))
+				return 1;
+	}
+	return 0;
+}
+int unify_variable(wam_t *wam, char *v1name, char *v2name)
+{
+	var_t *v1 = wam_get_ref(wam, v1name);
+	var_t *v2 = wam_get_ref(wam, v2name);
+	if (unify_variable2(wam, v1, v2)) {
+		wam->pc += 1;
+	} else
+		wam_backtrack(wam);
+	return 0;
+}
+int unify_struc(wam_t *wam,char *strucname, char *headname, char* tailname)
+{
+	var_t *struc = wam_get_ref(wam, strucname);
+	var_t *head = wam_get_ref(wam, headname);
+	var_t *tail = wam_get_ref(wam, tailname);
+
+	if (unify_struc2(wam, struc, head, tail)) {
+		wam->pc += 1;
+	} else {
+		wam_backtrack(wam);
+	}
+	return 0;
+}
+int unify_list(wam_t *wam, char *listname, char *headname, char *tailname) {
+	var_t *list = wam_get_ref(wam, listname);
+	var_t *head = wam_get_ref(wam, headname);
+	var_t *tail = wam_get_ref(wam, tailname);
+	int res = 0;
+	if (list->tag == REF) {
+		list->tag = LIS;
+		list->head = head;
+		list->tail = tail;
+		res = 1;
+	}
+
+	if (list->tag == LIS) {
+		if (unify_variable2(wam, head, list->head))
+			if (unify_variable2(wam, tail, list->tail)) {
+				res = 1;
+			}
+	}
+
+	if (res)
+		wam->pc += 1;
+	else
+		wam_backtrack(wam);
+	return 0;
+}
+int put_constant(wam_t *wam, char *constname, char *regname)
+{
+	var_t *Ai = wam_get_ref(wam, regname);
+	Ai->tag = CON;
+	strcpy(Ai->value, constname);
+	wam->pc += 1;
+	return 0;
+}
+// int put_list(wam_t *wam, char *headname, char *tailname, char *argname) { return 0; }
+int put_value(wam_t *wam, char *varname, char *argname)
+{
+	var_t *Vi = wam_get_ref(wam, varname);
+	var_t *An = wam_get_ref(wam, argname);
+	var_copy(An, Vi);
+	wam->pc += 1;
+	return 0;
+}
+int put_variable(wam_t *wam, char *varname, char *argname)
+{
+	var_t *Vn = deref(wam_get_ref(wam, varname));
+	var_t *Ai = wam_get_ref(wam, argname);
+	Ai->tag = REF;
+	Ai->ref = Vn;
+	wam->pc += 1;
+	return 0;
+}
+int try_me_else(wam_t *wam, int next)
+{
+	choicepoint_t *cp = cp_init(wam->args, wam->ctnptr);
+	cp->lastcp = wam->cp;
+	cp->nextclause = next;
+	cp->lastenv = wam->env;
+	wam->pc += 1;
+	return 0;
+}
+int proceed(wam_t *wam)
+{
+	wam->pc = wam->ctnptr;
+	return 0;
+}
+int is_bound(wam_t *wam, var_t *var)
+{
+	var = deref(var);
+	if (var->tag == REF) {
+		wam_backtrack(wam);
+	} else {
+		wam->pc += 1;
+	}
+	return 0;
+}
+int allocate(wam_t *wam)
+{
+	environ_t *env = env_init(wam->ctnptr, wam->env);
+	wam->env = env;
+	wam->pc += 1;
+	return 0;
+}
+int deallocate(wam_t *wam)
+{
+	wam->ctnptr = wam->env->retA;
+	wam->env = wam->env->lastenv;
+	wam->pc += 1;
+	return 0;
+}
 
 int wam_call(wam_t *wam, int target)
 {

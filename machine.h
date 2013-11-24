@@ -13,6 +13,7 @@ typedef struct var_t {
 	char value[MAX_WORD_LEN];
 	struct var_t *ref, *head, *tail;
 	char name[MAX_WORD_LEN];
+	int display;
 } var_t;
 
 char *TAG_NAMES(tag_t tag);
@@ -55,15 +56,14 @@ wam_t *wam_init(prog_t *prog);
 var_t *wam_get_ref(wam_t *wam, char *name);
 
 typedef struct choicepoint_t {
-	var_t *args;
+	var_t **args;
 	environ_t *lastenv;
 	int retA;
 	struct choicepoint_t *lastcp;
 	int nextclause;
-	int trailptr;
 } choicepoint_t;
 
-choicepoint_t *cp_init(var_t *args, int trailptr, int retA);
+choicepoint_t *cp_init(var_t **args, int retA);
 // byte code interpretation begins
 
 int create_variable(wam_t *wam, char *regname, char *varname);
@@ -76,7 +76,7 @@ int unify_variable(wam_t *wam, char *v1name, char *v2name);
 int unify_struc(wam_t *wam,char *strucname, char *headname, char* tailname);
 int unify_list(wam_t *wam, char *listname, char *headname, char *tailname);
 int put_constant(wam_t *wam, char *constname, char *regname);
-int put_list(wam_t *wam, char *headname, char *tailname, char *argname);
+// int put_list(wam_t *wam, char *headname, char *tailname, char *argname);
 int put_value(wam_t *wam, char *varname, char *argname);
 int put_variable(wam_t *wam, char *varname, char *argname);
 int try_me_else(wam_t *wam, int next);

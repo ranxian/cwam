@@ -7,6 +7,7 @@ var_t *var_init()
 	var_t *var = malloc(sizeof(var_t));
 	var->tag = REF;
 	var->ref = var;
+	var->display = 0;
 	return var;
 }
 
@@ -14,6 +15,7 @@ var_t *var_init_as_unbound(char *name)
 {
 	var_t *var = var_init();
 	strcpy(var->name, name);
+	var->display = 0;
 	return var;
 }
 
@@ -23,6 +25,7 @@ var_t *var_init_as_const(char *name, char *value)
 	var->tag = CON;
 	strcpy(var->value, value);
 	strcpy(var->name, name);
+	var->display = 0;
 	return var;
 }
 
@@ -32,6 +35,7 @@ var_t *var_init_as_bounded(char *name, var_t *v)
 	var->tag = REF;
 	var->ref = v;
 	strcpy(var->name, name);
+	var->display = 0;
 	return var;
 }
 
