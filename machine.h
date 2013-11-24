@@ -16,6 +16,7 @@ typedef struct var_t {
 } var_t;
 
 char *TAG_NAMES(tag_t tag);
+var_t *var_init();
 var_t *var_init_as_unbound(char *name);
 var_t *var_init_as_const(char *name, char *value);
 var_t *var_init_as_bounded(char *name, var_t *v);

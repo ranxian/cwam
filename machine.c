@@ -53,15 +53,14 @@ int proceed(wam_t *wam) { return 0; }
 int is_bound(wam_t *wam, var_t *var) { return 0; }
 int allocate(wam_t *wam) { return 0; }
 int deallocate(wam_t *wam) { return 0; }
-char *var_info(var_t *var) { return NULL; }
+
 int wam_call(wam_t *wam, int target)
 {
 	if (target >= 0) {
 		wam->ctnptr = wam->pc + 1;
 		wam->pc = target;
-	} else {
-		if (!wam_intpred(wam, target))
-			wam_backtrack(wam);
+	} else if (!wam_intpred(wam, target)) {
+		wam_backtrack(wam);
 	}
 	return 0;
 }
@@ -82,6 +81,7 @@ int wam_backtrack(wam_t *wam)
 	}
 	return 0;
 }
+
 int wam_intpred(wam_t *wam, int call)
 {
 	prog_t *prog = wam->prog;
@@ -196,11 +196,25 @@ wam_t *wam_init(prog_t *prog)
 {
 	wam_t *wam = malloc(sizeof(wam_t));
 	wam->prog = prog;
+	wam_reset(wam);
 	return wam;
 }
 
 var_t *wam_get_ref(wam_t *wam, char *name) {
-	return NULL;
+	var_t **array;
+	switch (name[0]) {
+		case 'Y': array = wam->env->vars; break;
+		case 'A': array = wam->args; break;
+		case 'Q': array = wam->qvars; break;
+		default: return NULL;
+	}
+	int len = strlen(name);
+	char *num = substr(name, 1, len-1);
+	int index = atoi(num);
+	if (array[index] == NULL) {
+		array[index] = var_init();
+	}
+	return array[index];
 }
 
 environ_t *env_init(int retA, environ_t *lastenv)

@@ -10,11 +10,11 @@ int indexof(char *str, char c)
 	return res;
 }
 
-char *substr(char *str, int begin, int end, char *to)
+char *substr(char *str, int begin, int end)
 {
 	int i, m = 0;
 	for (i = begin; i <= end; i++)
-		to[m++] = str[i];
-	to[m] = 0;
-	return to;
+		temp[m++] = str[i];
+	temp[m] = 0;
+	return temp;
 }
