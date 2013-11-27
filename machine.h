@@ -24,7 +24,7 @@ var_t *var_init_as_bounded(char *name, var_t *v);
 int var_copy(var_t *src, var_t *dst);
 var_t *deref(var_t *var);
 void var_print(var_t *var);
-char *var_info(var_t *var);
+void var_info(var_t *var, char *res);
 static char tempstr[64];
 
 typedef struct environ_t {

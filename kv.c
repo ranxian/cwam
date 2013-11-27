@@ -37,6 +37,7 @@ kv_t *kv_tbl_insert(kv_tbl_t *table, char *key, int intval, char *strval)
 
 	return &table->kvs[len];
 }
+
 int kv_tbl_contains(kv_tbl_t *table, char *key)
 {
 	int i;
@@ -45,4 +46,23 @@ int kv_tbl_contains(kv_tbl_t *table, char *key)
 			return 1;
 	}
 	return 0;
+}
+
+int kv_tbl_remove(kv_tbl_t *table, char *key)
+{
+	int len = table->len;
+	int i;
+	for (i = 0; i < len; i++) {
+		if (strcmp(table->kvs[i].key, key) == 0) {
+			int j;
+			for (j = i; j < len - 1; j++) {
+				table->kvs[j] = table->kvs[j+1]; 
+			}
+			table->len -= 1;
+			return 1;
+		}
+	}
+
+	return 0;
+
 }

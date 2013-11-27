@@ -1,0 +1,2 @@
+consult('db.pr').
+father(sam, Who).

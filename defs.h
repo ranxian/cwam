@@ -16,6 +16,7 @@ typedef enum wam_op_t {
 	OP_GET_CONST,
    	OP_GET_VAL,
 	OP_GET_VAR,
+	OP_GET_LVL,
 	OP_PUT_VAL,
 	OP_PUT_VAR,
 	OP_PUT_CONST,

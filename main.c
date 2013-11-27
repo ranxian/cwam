@@ -9,17 +9,22 @@ int main()
 {
 	int i;
 	char line[MAX_LINE_LEN];
-	char *p;
 	printf("This is XR's prolog interpreter\n");
 	printf("Type help to get help\n");
 	wam_t *wam = wam_init(prog_init());
-	do {
+	while (1) {
+		char *p;
 		printf("?- ");
 		p = fgets(line, MAX_LINE_LEN, stdin);
 		if (p) {
 			for (i = strlen(p); i >= 0; i--)
 				if (p[i] == '\n') p[i] = 0;
+			if (!wam_run_query(wam, p)) {
+				break;
+			}
+		} else {
+			break;
 		}
-	} while (p != NULL && wam_run_query(wam, p));
+	}
 	printf("Bye.\n");
 }

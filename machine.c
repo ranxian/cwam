@@ -40,7 +40,6 @@ int create_variable(wam_t *wam, char *regname, char *varname)
 	if (varname[0] != '_') {
 		var_t *q = wam_get_ref(wam, regname);
 		strcpy(q->name, varname);
-		char *num = substr(varname, 1, strlen(varname) - 1);
 		q->display = 1;
 	}
 	wam->pc += 1;
@@ -57,14 +56,16 @@ int get_constant(wam_t *wam, char *constname, char *regname)
 {
 	var_t *v = deref(wam_get_ref(wam, regname));
 	int failed = 1;
+	printf("%s\n", v->name);
 	if (v->tag == REF) {
 		v->tag = CON;
 		strcpy(v->value, constname);
 		failed = 0;
 	} else if (v->tag == CON) {
-		if (strcpy(constname, v->value) == 0)
+		if (strcmp(constname, v->value) == 0)
 			failed = 0;
 	}
+	printf("%d\n", failed);
 	if (failed)
 		wam_backtrack(wam);
 	else
@@ -204,7 +205,7 @@ int try_me_else(wam_t *wam, int next)
 	cp->nextclause = next;
 	cp->lastenv = wam->env;
 	wam->pc += 1;
-	return 0;
+	return 0;	
 }
 int proceed(wam_t *wam)
 {
@@ -238,6 +239,7 @@ int deallocate(wam_t *wam)
 
 int wam_call(wam_t *wam, int target)
 {
+	printf("%d\n", target);
 	if (target >= 0) {
 		wam->ctnptr = wam->pc + 1;
 		wam->pc = target;
@@ -269,47 +271,54 @@ int wam_intpred(wam_t *wam, int call)
 	prog_t *prog = wam->prog;
 	int result = 1;
 	var_t *v = wam->args[0];
-	switch (call) {
-		case CALL_CALL:
-		{
-			var_t *v2 = deref(v);
-			int target = -1;
-			if (v2->tag == CON) {
-				kv_t *kv = kv_tbl_lookup(prog->labels, v2->value);
-				if (kv != NULL)
-					target = kv->intval;
-			} else if (v2->tag == STR) {
-				kv_t *kv = kv_tbl_lookup(prog->labels, v2->head->value);
-				if (kv != NULL) {
-					target = kv->intval;
-					var_t *tail = v2->tail;
-					int cnt = 0;
-					while (tail != NULL) {
-						char temp[64];
-						sprintf(temp, "A%d", cnt);
-						var_t *v3 = wam_get_ref(wam, temp);
-						v3->tag = REF;
-						v3->ref = tail->head;
-						cnt++;
-						tail = tail->tail;
-					}
+	if (call == CALL_CALL) {
+		printf("call intpred call\n");
+		var_t *v2 = deref(v);
+		int target = -1;
+		if (v2->tag == CON) {
+			kv_t *kv = kv_tbl_lookup(prog->labels, v2->value);
+			if (kv != NULL)
+				target = kv->intval;
+		} else if (v2->tag == STR) {
+			kv_t *kv = kv_tbl_lookup(prog->labels, v2->head->value);
+			if (kv != NULL) {
+				target = kv->intval;
+				var_t *tail = v2->tail;
+				int cnt = 0;
+				while (tail != NULL) {
+					char temp[64];
+					sprintf(temp, "A%d", cnt);
+					var_t *v3 = wam_get_ref(wam, temp);
+					v3->tag = REF;
+					v3->ref = tail->head;
+					cnt++;
+					tail = tail->tail;
 				}
 			}
-			if (target >= 0)
-				wam_call(wam, target);
-			else
-				wam_backtrack(wam);
-			break;
 		}
-		case CALL_CONSULT: wam_consult(wam, var_info(v)); break;
-		default: result = 0; break;
+		if (target >= 0)
+			wam_call(wam, target);
+		else
+			wam_backtrack(wam);
+	} else if (call == CALL_CONSULT) {
+		printf("call intpred consult.\n");
+		char info[MAX_WORD_LEN];
+		var_info(v, info);
+		wam_consult(wam, info);
+	} else {
+		result = 0;
 	}
 	return result;
 }
 
 int wam_consult(wam_t *wam, char *filename)
 {
-	prog_t *prog = compile_program(filename);
+	char fn2[256];
+	strcpy(fn2, filename+1);
+	fn2[strlen(fn2)-1] = 0;
+	printf("consulting %s\n", fn2);
+	prog_t *prog = compile_program(fn2);
+	printf("consulted\n");
 	if (prog == NULL)
 		wam_backtrack(wam);
 	else {
@@ -347,14 +356,18 @@ int wam_run_query(wam_t *wam, char *query_str)
 		return 1;
 	}
 
+	wam_reset(wam);
+	prog_del_from_label(wam->prog, "query$");
+
 	prog_t *prog = compile_query(query_str);
-	prog_info(prog);
 
 	prog_add_prog(wam->prog, prog);
-	prog_update_label(prog);
+	prog_update_label(wam->prog);
 
-	wam->pc = prog_locate_label(prog, "query$");
-	printf("pc: %d\n", wam->pc);
+	prog_info(wam->prog);
+
+	wam->pc = prog_locate_label(wam->prog, "query$");
+	printf("PC: %d\n", wam->pc);
 
 	wam_run(wam);
 
@@ -395,6 +408,11 @@ var_t *wam_get_ref(wam_t *wam, char *name) {
 	int index = atoi(num);
 	if (array[index] == NULL) {
 		array[index] = var_init();
+		if (name[0] == 'A') {
+			wam->narg += 1;
+		} else if (name[0] == 'Q') {
+			wam->nqvar += 1;
+		}
 	}
 	return array[index];
 }
@@ -430,8 +448,11 @@ int wam_run(wam_t *wam)
 	wam->opcnt = 0;
 	wam->bpcnt = 0;
 
+	int time = 0;
 	while (wam->pc >= 0) {
-		getchar();
+		int halted = 0;
+		time += 1;
+		if (time > 10) break;
 		wam->failed = 0;
 		stmt_t *stmt = wam->prog->stmts[wam->pc];
 		printf("PC: %d, stmt: %s\n", wam->pc, stmt->label);
@@ -464,7 +485,7 @@ int wam_run(wam_t *wam)
 			case OP_PUT_CONST:
 				put_constant(wam, stmt->args[0], stmt->args[1]); break;
 			case OP_HALT:
-				break;
+				halted = 1;
 			case OP_NOOP:
 				wam->pc += 1; break;
 			case OP_PROCEED:
@@ -487,6 +508,8 @@ int wam_run(wam_t *wam)
 			while (wam->cp != NULL) wam_backtrack(wam);
 			wam_backtrack(wam);
 		}
+
+		if (halted) break;
 	}
 	return 0;
 }

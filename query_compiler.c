@@ -33,7 +33,6 @@ prog_t *compile_query(char *query_str)
 	toks_t *toks = toks_init(query_str);
 	prog_t *prog;
 	syn_node_t *root = syn_node_init();
-
 	if (query(toks, root)) {
 		if (toks->idx > toks->len) {
 			printf("panic: query not fully parsed!\n");

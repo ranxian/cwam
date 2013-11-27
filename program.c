@@ -76,8 +76,8 @@ int prog_add_stmt_at(prog_t *prog, stmt_t *stmt, int pos)
 int prog_del_from_line(prog_t *prog, int line)
 {
 	int i;
-	int delcnt = 0;
-	for (i = line; ; i++) {
+	int delcnt = 1;
+	for (i = line+1; ; i++) {
 		if (prog->stmts[i]->label[0] != 0)
 			break;
 		delcnt += 1;
@@ -92,7 +92,13 @@ int prog_del_from_line(prog_t *prog, int line)
 int prog_del_from_label(prog_t *prog, char *label)
 {
 	int line = prog_locate_label(prog, label);
-	return prog_del_from_line(prog, line);
+	int result = 0;
+	printf("delete %s at line %d\n", label, line);
+	if (line >= 0) {
+		result = prog_del_from_line(prog, line);
+		kv_tbl_remove(prog->labels, label);
+	}
+	return result;
 }
 
 int prog_get_last_clause(prog_t *prog, char *label, int butone)
@@ -155,6 +161,7 @@ int prog_locate_label(prog_t *prog, char *label)
 int prog_update_label(prog_t *prog)
 {
 	int i;
+	prog_info(prog);
 	kv_tbl_t *table = kv_tbl_init();
 	for (i = 0; i < prog->nstmt; i++) {
 		if (prog->stmts[i]->label[0]) { // has a label

@@ -1,6 +1,8 @@
 #include "helper.h"
 #include <string.h>
 
+static char temp[256];
+
 int indexof(char *str, char c)
 {
 	int res = -1;
@@ -17,4 +19,12 @@ char *substr(char *str, int begin, int end)
 		temp[m++] = str[i];
 	temp[m] = 0;
 	return temp;
+}
+
+char *TAG_NAME(tag_t tag)
+{
+	static char *_names[] = {
+		"REG", "CON", "LIS", "STR"
+	};
+	return _names[tag];
 }

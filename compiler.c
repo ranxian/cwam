@@ -4,6 +4,7 @@
 #include "compiler.h"
 #include "defs.h"
 #include "kv.h"
+#include "machine.h"
 #define is_anum(c) (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_')
 #define SEQL(s1, s2) (strcmp((s1), (s2)) == 0)
 #define is_comp(s) (SEQL((s), ">") || SEQL((s), "<") || SEQL((s), ">=") || SEQL((s), "<=") || \
@@ -101,7 +102,7 @@ int is_predicate(const char *s)
 
 int program(toks_t *toks, syn_node_t *tree)
 {
-	printf("test program: %s\n", CUR_TOK(toks));
+	// printf("test program: %s\n", CUR_TOK(toks));
 	if (toks->idx >= toks->len) return 0;
 	tree->type = S_PROGRAM;
 	int old_idx = push_stat(toks, tree);
@@ -124,7 +125,6 @@ int predicate(toks_t *toks, syn_node_t *tree)
 		tree->type = S_PREDICATE;
 		tree->left = tree->right = NULL;
 		strcpy(tree->value, CUR_TOK(toks));
-		printf("%s\n", tree->value);
 		toks->idx += 1;
 		return 1;
 	}
@@ -132,7 +132,7 @@ int predicate(toks_t *toks, syn_node_t *tree)
 }
 int constant(toks_t *toks, syn_node_t *tree)
 {
-	printf("test constant: %s\n", CUR_TOK(toks));
+	// printf("test constant: %s\n", CUR_TOK(toks));
 	if (is_constant(CUR_TOK(toks))) {
 		tree->type = S_CONSTANT;
 		tree->left = tree->right = NULL;
@@ -152,7 +152,7 @@ int constant(toks_t *toks, syn_node_t *tree)
 }
 int clause(toks_t *toks, syn_node_t *tree)
 {
-	printf("test clause: %s\n", CUR_TOK(toks));
+	// printf("test clause: %s\n", CUR_TOK(toks));
 	tree->type = S_CLAUSE;
 	int old_idx = push_stat(toks, tree);
 
@@ -173,7 +173,7 @@ int clause(toks_t *toks, syn_node_t *tree)
 }
 int head(toks_t *toks, syn_node_t *tree)
 {
-	printf("test head:%s\n", CUR_TOK(toks));
+	// printf("test head:%s\n", CUR_TOK(toks));
 	tree->type = S_HEAD;
 	int old_idx = push_stat(toks, tree);
 
@@ -194,7 +194,7 @@ int body(toks_t *toks, syn_node_t *tree)
 {
 	tree->type = S_BODY;
 	int old_idx = push_stat(toks, tree);
-	printf("test body: %s\n", CUR_TOK(toks));
+	// printf("test body: %s\n", CUR_TOK(toks));
 	if (condition(toks, tree->left)) {
 		if (is_token(toks, ",")) {
 			if (token(toks, ",") && body(toks, tree->right))
@@ -210,7 +210,7 @@ int body(toks_t *toks, syn_node_t *tree)
 }
 int list(toks_t *toks, syn_node_t *tree)
 {
-	printf("test list: %s\n", CUR_TOK(toks));
+	// printf("test list: %s\n", CUR_TOK(toks));
 	tree->type = S_LIST;
 	int old_idx = push_stat(toks, tree);
 
@@ -263,7 +263,7 @@ int comparator(toks_t *toks, syn_node_t *tree)
 
 int element(toks_t *toks, syn_node_t *tree)
 {
-	printf("test element: %s\n", CUR_TOK(toks));
+	// printf("test element: %s\n", CUR_TOK(toks));
 	tree->type = S_ELEM;
 	int old_idx = toks->idx;
 
@@ -282,7 +282,7 @@ int element(toks_t *toks, syn_node_t *tree)
 }
 int structure(toks_t *toks, syn_node_t *tree)
 {
-	printf("test structure: %s\n", CUR_TOK(toks));
+	// printf("test structure: %s\n", CUR_TOK(toks));
 	tree->type = S_STRUCT;
 	int old_idx = push_stat(toks, tree);
 
@@ -301,7 +301,7 @@ int structure(toks_t *toks, syn_node_t *tree)
 
 int variable(toks_t *toks, syn_node_t *tree)
 {
-	printf("test variable: %s\n", CUR_TOK(toks));
+	// printf("test variable: %s\n", CUR_TOK(toks));
 	if (is_variable(CUR_TOK(toks))) {
 		tree->type = S_VARIABLE;
 		tree->left = tree->right = NULL;
@@ -439,7 +439,7 @@ int first_occur(char *var)
 
 prog_t *syn_node_to_prog(syn_node_t *tree)
 {
-	printf("[syn_node_to_prog begin] %s\n", NODE_NAMES(tree->type));
+	// printf("[syn_node_to_prog begin] %s\n", NODE_NAMES(tree->type));
 	if (tree == NULL) NULL;
 	prog_t *prog = prog_init();
 
@@ -621,7 +621,8 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 				prog_add_node(prog, tree->left);
 				if (tree->right != NULL)
 					prog_add_node(prog, tree->right);
-				prog_add_stmt(prog, stmt_init("", OP_HALT, 0));
+				stmt_t *stmt = stmt_init("", OP_HALT, 0);
+				prog_add_stmt(prog, stmt);
 			}
 			break;
 		case S_PREDICATE:
