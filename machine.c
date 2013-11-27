@@ -101,7 +101,7 @@ int unify_variable2(wam_t *wam, var_t *v1, var_t *v2)
 	}
 
 	if ((v1->tag == LIS && v2->tag == LIS) ||
-			v1->tag == STR && v2->tag == STR) {
+			(v1->tag == STR && v2->tag == STR)) {
 		if (unify_variable2(wam, v1->head, v2->head) &&
 				unify_variable2(wam, v1->tail, v2->tail))
 			return 1;
@@ -111,7 +111,7 @@ int unify_variable2(wam_t *wam, var_t *v1, var_t *v2)
 int unify_struc2(wam_t *wam, var_t *struc, var_t *head, var_t* tail)
 {
 	if (struc->tag == REF) {
-		struc->tag == STR;
+		struc->tag = STR;
 		struc->head = head;
 		struc->tail = tail;
 		return 1;
@@ -405,6 +405,15 @@ environ_t *env_init(int retA, environ_t *lastenv)
 	env->retA = retA;
 	env->lastenv  = lastenv;
 	return env;
+}
+
+choicepoint_t *cp_init(var_t **args, int retA)
+{
+	choicepoint_t *cp = malloc(sizeof(choicepoint_t));
+	cp->args = args;
+	cp->retA = retA;
+
+	return cp;
 }
 
 int wam_reset(wam_t *wam) {
