@@ -1,6 +1,8 @@
 #include "machine.h"
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
+#include "helper.h"
 static char temp[256];
 
 var_t *var_init()
@@ -9,6 +11,7 @@ var_t *var_init()
 	var->tag = REF;
 	var->ref = var;
 	var->display = 0;
+
 	return var;
 }
 
@@ -63,7 +66,7 @@ void var_print(var_t *var)
 {
 	char t[64];
 	var_info(var, t);
-	printf("%s\n", t);
+	printf("%s %s\n", var->name, t);
 	return;
 }
 

@@ -18,4 +18,6 @@ kv_t *kv_tbl_lookup(kv_tbl_t *table, char *key);
 kv_t *kv_tbl_insert(kv_tbl_t *table, char *key, int intval, char *strval);
 int kv_tbl_remove(kv_tbl_t *table, char *key);
 int kv_tbl_contains(kv_tbl_t *table, char *key);
+int kv_tbl_contains_whtpx(kv_tbl_t *table, char *key);
+kv_t *kv_tbl_lookup_whtpx(kv_tbl_t *table, char *key);
 #endif

@@ -478,7 +478,7 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 						s = s->right;
 					}
 				}
-
+				printf("hehehehehehe %s\n", tree->left->value);
 				prog_add_stmt(prog, stmt_init("", OP_CALL, 1, tree->left->value));
 				break;
 			}

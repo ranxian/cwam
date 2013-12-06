@@ -58,6 +58,7 @@ static int preprocess_names(syn_node_t *root)
 static prog_t *compile(char *code)
 {
 	compiler_begin();
+	var_prefix = 'Y';
 	syn_node_t *root = syn_node_init();
 	toks_t *toks = toks_init(code);
 	if (program(toks, root) && toks->idx == toks->len) {

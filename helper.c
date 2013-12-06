@@ -24,7 +24,7 @@ char *substr(char *str, int begin, int end)
 char *TAG_NAME(tag_t tag)
 {
 	static char *_names[] = {
-		"REG", "CON", "LIS", "STR"
+		"REF", "CON", "LIS", "STR"
 	};
 	return _names[tag];
 }

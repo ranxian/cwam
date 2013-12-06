@@ -161,7 +161,6 @@ int prog_locate_label(prog_t *prog, char *label)
 int prog_update_label(prog_t *prog)
 {
 	int i;
-	prog_info(prog);
 	kv_tbl_t *table = kv_tbl_init();
 	for (i = 0; i < prog->nstmt; i++) {
 		if (prog->stmts[i]->label[0]) { // has a label
@@ -175,9 +174,10 @@ int prog_update_label(prog_t *prog)
 			stmt->op == OP_TRY_ME_ELSE || stmt->op == OP_NOT_CALL) {
 			char *label = stmt->args[0];
 			stmt->jump = -1;
-			if (kv_tbl_contains(table, label)) {
-				stmt->jump = kv_tbl_lookup(table, label)->intval;
+			if (kv_tbl_contains_whtpx(table, label)) {
+				stmt->jump = kv_tbl_lookup_whtpx(table, label)->intval;
 			} else {
+				printf("table has no %s\n", label);
 				if (!strcmp(label, "call")) {
 					stmt->jump = CALL_CALL;
 				} else if (!strcmp(label, "consult")) {

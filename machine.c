@@ -3,6 +3,7 @@
 #include "compiler.h"
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "helper.h"
 #define STREQL(s1, s2) (strcmp(s1, s2) == 0)
 char *OP_NAMES(wam_op_t op)
@@ -39,6 +40,8 @@ int create_variable(wam_t *wam, char *regname, char *varname)
 {
 	if (varname[0] != '_') {
 		var_t *q = wam_get_ref(wam, regname);
+		assert(q->tag == REF);
+		assert(q == q->ref);
 		strcpy(q->name, varname);
 		q->display = 1;
 	}
@@ -50,13 +53,17 @@ int get_variable(wam_t *wam, char *regname1, char *regname2)
 	var_t *vn = wam_get_ref(wam, regname1);
 	var_t *Ai = wam_get_ref(wam, regname2);
 	var_copy(vn, Ai);
+	
+	var_print(Ai);
+	
+	wam->pc += 1;
 	return 0;
 }
 int get_constant(wam_t *wam, char *constname, char *regname)
 {
+	var_t *v2 = wam_get_ref(wam, regname);
 	var_t *v = deref(wam_get_ref(wam, regname));
 	int failed = 1;
-	printf("%s\n", v->name);
 	if (v->tag == REF) {
 		v->tag = CON;
 		strcpy(v->value, constname);
@@ -65,7 +72,6 @@ int get_constant(wam_t *wam, char *constname, char *regname)
 		if (strcmp(constname, v->value) == 0)
 			failed = 0;
 	}
-	printf("%d\n", failed);
 	if (failed)
 		wam_backtrack(wam);
 	else
@@ -251,7 +257,6 @@ int wam_call(wam_t *wam, int target)
 
 int wam_backtrack(wam_t *wam)
 {
-	int i;
 	wam->ctnptr++;
 	wam->failed = 1;
 	if (wam->cp != NULL) {
@@ -452,7 +457,7 @@ int wam_run(wam_t *wam)
 	while (wam->pc >= 0) {
 		int halted = 0;
 		time += 1;
-		if (time > 10) break;
+		if (time > 101) break;
 		wam->failed = 0;
 		stmt_t *stmt = wam->prog->stmts[wam->pc];
 		printf("PC: %d, stmt: %s\n", wam->pc, stmt->label);
@@ -491,6 +496,7 @@ int wam_run(wam_t *wam)
 			case OP_PROCEED:
 				proceed(wam); break;
 			case OP_RTRY_ME_ELSE:
+			case OP_TRY_ME_ELSE:
 				try_me_else(wam, stmt->jump); break;
 			case OP_TRUST_ME:
 				wam->pc++; break;
@@ -508,7 +514,6 @@ int wam_run(wam_t *wam)
 			while (wam->cp != NULL) wam_backtrack(wam);
 			wam_backtrack(wam);
 		}
-
 		if (halted) break;
 	}
 	return 0;

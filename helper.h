@@ -3,5 +3,5 @@
 #include "machine.h"
 int indexof(char *str, char c);
 char *substr(char *str, int start, int end);
-char *TAG_NAMES(tag_t tag);
+char *TAG_NAME(tag_t tag);
 #endif

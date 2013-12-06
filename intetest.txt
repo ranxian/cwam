@@ -1,2 +1,2 @@
 consult('db.pr').
-father(sam, Who).
+son(tim, Who).

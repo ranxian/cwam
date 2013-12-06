@@ -1,6 +1,7 @@
 #include "kv.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 kv_tbl_t *kv_tbl_init()
 {
@@ -25,6 +26,46 @@ kv_t *kv_tbl_lookup(kv_tbl_t *table, char *key)
 	return NULL;
 }
 
+kv_t *kv_tbl_lookup_whtpx(kv_tbl_t *table, char *key)
+{
+	int i;
+	int len = strlen(key);
+	for (i = 0; i < table->len; i++) {
+		kv_t *kv = &table->kvs[i];
+
+		int yes = 1, j;
+		for (j = 0; j < len; j++) {
+			if (kv->key[j] != key[j]) {
+				yes = 0;
+				break;
+			}
+		}
+		if (yes && (kv->key[len] == '~' || kv->key[len] == 0))
+			return kv;
+	}
+	return NULL;
+}
+
+int kv_tbl_contains_whtpx(kv_tbl_t *table, char *key)
+{
+	int i;
+	int len = strlen(key);
+	for (i = 0; i < table->len; i++) {
+		kv_t *kv = &table->kvs[i];
+
+		int yes = 1, j;
+		for (j = 0; j < len; j++) {
+			if (kv->key[j] != key[j]) {
+				yes = 0;
+				break;
+			}
+		}
+		if (yes && (kv->key[len] == '~' || kv->key[len] == 0))
+			return 1;
+	}
+	return 0;
+}
+
 kv_t *kv_tbl_insert(kv_tbl_t *table, char *key, int intval, char *strval)
 {
 	int len = table->len;
@@ -42,6 +83,8 @@ int kv_tbl_contains(kv_tbl_t *table, char *key)
 {
 	int i;
 	for (i = 0; i < table->len; i++) {
+			printf("%s\n", table->kvs[i].key);
+
 		if (strcmp(key, table->kvs[i].key) == 0)
 			return 1;
 	}

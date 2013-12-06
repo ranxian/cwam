@@ -30,6 +30,7 @@ int query(toks_t *toks, syn_node_t *tree)
 prog_t *compile_query(char *query_str)
 {
 	compiler_begin();
+	var_prefix = 'Q';
 	toks_t *toks = toks_init(query_str);
 	prog_t *prog;
 	syn_node_t *root = syn_node_init();

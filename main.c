@@ -3,7 +3,7 @@
 #include "program.h"
 #include <stdio.h>
 #include <string.h>
-char var_prefix = 'Q';
+char var_prefix;
 
 int main()
 {
