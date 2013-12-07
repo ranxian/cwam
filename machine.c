@@ -54,14 +54,11 @@ int get_variable(wam_t *wam, char *regname1, char *regname2)
 	var_t *Ai = wam_get_ref(wam, regname2);
 	var_copy(vn, Ai);
 	
-	var_print(Ai);
-	
 	wam->pc += 1;
 	return 0;
 }
 int get_constant(wam_t *wam, char *constname, char *regname)
 {
-	var_t *v2 = wam_get_ref(wam, regname);
 	var_t *v = deref(wam_get_ref(wam, regname));
 	int failed = 1;
 	if (v->tag == REF) {
@@ -71,6 +68,9 @@ int get_constant(wam_t *wam, char *constname, char *regname)
 	} else if (v->tag == CON) {
 		if (strcmp(constname, v->value) == 0)
 			failed = 0;
+		else {
+			printf("%s != %s\n", constname, v->value);
+		}
 	}
 	if (failed)
 		wam_backtrack(wam);
@@ -208,6 +208,7 @@ int try_me_else(wam_t *wam, int next)
 {
 	choicepoint_t *cp = cp_init(wam->args, wam->ctnptr);
 	cp->lastcp = wam->cp;
+	wam->cp = cp;
 	cp->nextclause = next;
 	cp->lastenv = wam->env;
 	wam->pc += 1;
@@ -257,17 +258,24 @@ int wam_call(wam_t *wam, int target)
 
 int wam_backtrack(wam_t *wam)
 {
-	wam->ctnptr++;
+	printf("backtracking\n");
+	wam->bpcnt++;
 	wam->failed = 1;
 	if (wam->cp != NULL) {
 		wam->ctnptr = wam->cp->retA;
+		printf("1\n");
 		wam->pc = wam->cp->nextclause;
+		printf("%d\n", wam->pc);
 		wam->env = wam->cp->lastenv;
+		printf("2\n");
 		memcpy(wam->args, wam->cp->args, sizeof(wam->args));
+		printf("3\n");
 		wam->cp = wam->cp->lastcp;
 	} else {
-		wam->pc -= 1;
+		printf("pc = -1\n");
+		wam->pc = -1;
 	}
+	printf("backtracked\n");
 	return 0;
 }
 
@@ -425,15 +433,26 @@ var_t *wam_get_ref(wam_t *wam, char *name) {
 environ_t *env_init(int retA, environ_t *lastenv)
 {
 	environ_t *env = malloc(sizeof(environ_t));
+	memset(env->vars, 0, sizeof(env->vars));
 	env->retA = retA;
 	env->lastenv  = lastenv;
 	return env;
 }
 
-choicepoint_t *cp_init(var_t **args, int retA)
+choicepoint_t *cp_init(var_t *args[], int retA)
 {
+	int i;
 	choicepoint_t *cp = malloc(sizeof(choicepoint_t));
-	cp->args = args;
+	for (i = 0; i < MAX_VAR_CNT; i++) {
+		if (args[i] != NULL) {
+			cp->args[i] = malloc(sizeof(var_t));	
+			memcpy(cp->args[i], args[i], sizeof(var_t));
+			printf("copied A%d\n", i);
+		} else {
+			cp->args[i] = NULL;
+		}
+	}
+	printf("1\n");
 	cp->retA = retA;
 
 	return cp;
@@ -454,8 +473,9 @@ int wam_run(wam_t *wam)
 	wam->bpcnt = 0;
 
 	int time = 0;
+	int halted;
 	while (wam->pc >= 0) {
-		int halted = 0;
+		halted = 0;
 		time += 1;
 		if (time > 101) break;
 		wam->failed = 0;
@@ -509,12 +529,13 @@ int wam_run(wam_t *wam)
 			default:
 				printf("unknown wam op in line %d!\n", wam->pc); wam_backtrack(wam); break;
 		}
-
-		if (wam->failed) {
-			while (wam->cp != NULL) wam_backtrack(wam);
-			wam_backtrack(wam);
-		}
 		if (halted) break;
 	}
+	if (halted) return 0;
+	if (wam->failed) {
+		while (wam->cp != NULL) wam_backtrack(wam);
+		wam_backtrack(wam);
+	}
+	printf("unknown\n");
 	return 0;
 }

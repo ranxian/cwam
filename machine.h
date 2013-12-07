@@ -56,7 +56,7 @@ wam_t *wam_init(prog_t *prog);
 var_t *wam_get_ref(wam_t *wam, char *name);
 
 typedef struct choicepoint_t {
-	var_t **args;
+	var_t *args[MAX_VAR_CNT];
 	environ_t *lastenv;
 	int retA;
 	struct choicepoint_t *lastcp;

@@ -1,4 +1,4 @@
-father(sam, tim).
+father(sam, herry).
 mother(alice, tim).
 boy(tim).
 son(X, Y) :- father(Y, X), boy(X).
