@@ -73,6 +73,7 @@ void var_print(var_t *var)
 void var_info2(var_t *var, char *res)
 {
 	if (var->tag == LIS) {
+		printf("%s\n", var->head->value);
 		var_info(var->head, res);
 		if (var->tail != NULL && var->tail->tag != CON) {
 			char t[MAX_WORD_LEN];
@@ -90,6 +91,7 @@ void var_info(var_t *var, char *res)
 			strcpy(res, var->value);
 			break;
 		case LIS:
+			printf("%s: ", TAG_NAME(var->tag));
 			var_info2(var, res);
 			break;
 		case STR:
