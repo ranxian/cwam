@@ -1,2 +1,4 @@
-consult('db.pr').
-son(tim, Who).
+consult('member.pr').
+list.
+member(time, [apple, blue, tim, what]).
+member(a, [b, c, d, a, e]).

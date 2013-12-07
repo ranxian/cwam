@@ -77,7 +77,7 @@ int prog_del_from_line(prog_t *prog, int line)
 {
 	int i;
 	int delcnt = 1;
-	for (i = line+1; ; i++) {
+	for (i = line+1; i < prog->nstmt; i++) {
 		if (prog->stmts[i]->label[0] != 0)
 			break;
 		delcnt += 1;
@@ -98,6 +98,7 @@ int prog_del_from_label(prog_t *prog, char *label)
 		result = prog_del_from_line(prog, line);
 		kv_tbl_remove(prog->labels, label);
 	}
+	printf("deleted\n");
 	return result;
 }
 

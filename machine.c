@@ -157,30 +157,36 @@ int unify_struc(wam_t *wam,char *strucname, char *headname, char* tailname)
 	}
 	return 0;
 }
-int unify_list(wam_t *wam, char *listname, char *headname, char *tailname) {
-	var_t *list = wam_get_ref(wam, listname);
-	var_t *head = wam_get_ref(wam, headname);
-	var_t *tail = wam_get_ref(wam, tailname);
-	int res = 0;
+
+int unify_list2(wam_t *wam, var_t *list, var_t *head, var_t *tail)
+{
 	if (list->tag == REF) {
 		trail_add(wam->trail, list);
 		list->tag = LIS;
 		list->head = head;
 		list->tail = tail;
-		res = 1;
+		return 1;
 	}
-
 	if (list->tag == LIS) {
-		if (unify_variable2(wam, head, list->head))
-			if (unify_variable2(wam, tail, list->tail)) {
-				res = 1;
-			}
+		if (unify_variable2(wam, head, list->head)) {
+			if (unify_variable2(wam, tail, list->tail))
+				return 1;
+		}
 	}
 
-	if (res)
+	return 0;
+}
+
+int unify_list(wam_t *wam, char *listname, char *headname, char *tailname) {
+	var_t *list = wam_get_ref(wam, listname);
+	var_t *head = wam_get_ref(wam, headname);
+	var_t *tail = wam_get_ref(wam, tailname);
+
+	if (unify_list2(wam, list, head, tail)) {
 		wam->pc += 1;
-	else
+	} else {
 		wam_backtrack(wam);
+	}
 	return 0;
 }
 int put_constant(wam_t *wam, char *constname, char *regname)
@@ -251,7 +257,6 @@ int deallocate(wam_t *wam)
 
 int wam_call(wam_t *wam, int target)
 {
-	printf("%d\n", target);
 	if (target >= 0) {
 		wam->ctnptr = wam->pc + 1;
 		wam->pc = target;
@@ -263,7 +268,7 @@ int wam_call(wam_t *wam, int target)
 
 int wam_backtrack(wam_t *wam)
 {
-	printf("backtracking\n");
+	// printf("backtracking\n");
 	wam->bpcnt++;
 	wam->failed = 1;
 	int i;
@@ -273,7 +278,6 @@ int wam_backtrack(wam_t *wam)
 		wam->env = wam->cp->lastenv;
 
 		int tp = wam->cp->trailptr;
-		printf("trail->n = %d, tp = %d\n", wam->trail->n, tp);
 		for (i = wam->trail->n - 1; i >= tp; i--) {
 			trail_undo(wam->trail, i);
 		}
@@ -286,7 +290,7 @@ int wam_backtrack(wam_t *wam)
 		}
 		wam->pc = -1;
 	}
-	printf("backtracked\n");
+	// printf("backtracked\n");
 	return 0;
 }
 
@@ -346,7 +350,7 @@ int wam_consult(wam_t *wam, char *filename)
 	if (prog == NULL)
 		wam_backtrack(wam);
 	else {
-		prog_info(prog);
+		// prog_info(prog);
 		prog_add_prog(wam->prog, prog);
 		prog_update_label(wam->prog);
 		wam->pc += 1;
@@ -458,7 +462,6 @@ choicepoint_t *cp_init(var_t *args[], int trailptr, int retA)
 		if (args[i] != NULL) {
 			cp->args[i] = malloc(sizeof(var_t));
 			memcpy(cp->args[i], args[i], sizeof(var_t));
-			printf("copied A%d\n", i);
 		} else {
 			cp->args[i] = NULL;
 		}
@@ -489,13 +492,20 @@ int wam_run(wam_t *wam)
 	while (wam->pc >= 0) {
 		halted = 0;
 		time += 1;
-		if (time > 101) break;
+
 		wam->failed = 0;
 		stmt_t *stmt = wam->prog->stmts[wam->pc];
 		printf("PC: %d, stmt: %s\n", wam->pc, stmt->label);
 		stmt_info(stmt);
 		if (wam->opcnt > wam->maxopcnt) {
 			printf("panic: maximum opcnt reached\n");
+			wam->failed = 1;
+			break;
+		}
+
+		if (time > 10000) {
+			printf("> 10000\n");
+			stmt->op = OP_HALT;
 			wam->failed = 1;
 			break;
 		}

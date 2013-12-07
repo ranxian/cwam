@@ -1,0 +1,5 @@
+parent(bill, sam).
+parent(sam, tim).
+parent(tim, sarah).
+ancestor(X, Y) :- parent(X, Y).
+ancestor(X, Y) :- ancestor(X, Z), parent(Z, Y).

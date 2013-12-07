@@ -434,12 +434,14 @@ char *deco_var(char *var)
 
 int first_occur(char *var)
 {
-	return !kv_tbl_contains(table, var);
+	if (strlen(var) > 0 && strcmp(var, "_") != 0)
+		return !kv_tbl_contains(table, var);
+	return 1;
 }
 
 prog_t *syn_node_to_prog(syn_node_t *tree)
 {
-	// printf("[syn_node_to_prog begin] %s\n", NODE_NAMES(tree->type));
+	printf("[syn_node_to_prog begin] %s\n", NODE_NAMES(tree->type));
 	if (tree == NULL) NULL;
 	prog_t *prog = prog_init();
 
@@ -469,7 +471,7 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 								break;
 							default:
 								{
-									prog_add_node(prog, tree->right);
+									prog_add_node(prog, s->left);
 									prog_add_stmt(prog, stmt_init("", OP_PUT_VAL, 2, last_var, cnt_arg(argcount)));
 									break;
 								}
@@ -478,7 +480,6 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 						s = s->right;
 					}
 				}
-				printf("hehehehehehe %s\n", tree->left->value);
 				prog_add_stmt(prog, stmt_init("", OP_CALL, 1, tree->left->value));
 				break;
 			}
@@ -519,16 +520,17 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 				if (tree->right != NULL) {
 					syn_node_t *s = tree->right;
 					int argcount = 0;
+					printf("here\n");
 
-					while (s != NULL) {
+					do {
 						if (s->left->type == S_CONSTANT) {
 							prog_add_stmt(prog, stmt_init("", OP_GET_CONST, 2, s->left->value, cnt_arg(argcount)));
-						}
-						else if (s->left->type == S_VARIABLE) {
+						} else if (s->left->type == S_VARIABLE) {
 							if (first_occur(s->left->value))
 								prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, deco_var(s->left->value), cnt_arg(argcount)));
 							else prog_add_stmt(prog, stmt_init("", OP_GET_VAL, 2, deco_var(s->left->value), cnt_arg(argcount)));
 						} else {
+							printf("val: %s\n", s->value);
 							char *decor = deco_var("");
 							prog_add_stmt(prog, stmt_init("", OP_GET_VAR, 2, decor, cnt_arg(argcount)));
 
@@ -537,7 +539,7 @@ prog_t *syn_node_to_prog(syn_node_t *tree)
 						}
 						argcount++;
 						s = s->right;
-					}
+					} while (s != NULL);
 				}
 				break;
 			}
