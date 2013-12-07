@@ -473,6 +473,11 @@ choicepoint_t *cp_init(var_t *args[], int trailptr, int retA)
 }
 
 int wam_reset(wam_t *wam) {
+	int i;
+	for (i = 0; i < wam->narg; i++)
+		wam->args[i] = NULL;
+	for (i = 0; i < wam->nqvar; i++) 
+		wam->qvars[i] = NULL;
 	wam->narg = 0;
 	wam->nqvar = 0;
 	wam->env = env_init(99999999, NULL);

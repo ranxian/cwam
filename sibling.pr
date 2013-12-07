@@ -1,0 +1,4 @@
+parent(a, b).
+parent(a, c).
+parent(b, d).
+sibling(X, Y) :- parent(Z, X), parent(Z, Y).
