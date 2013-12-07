@@ -35,10 +35,16 @@ typedef struct environ_t {
 
 environ_t *env_init(int retA, environ_t *lastenv);
 
+typedef struct {
+	var_t *contents[MAX_VAR_CNT];
+	int n;
+} trail_t;
+
 struct choicepoint_t;
 typedef struct {
 	prog_t *prog;
 	struct choicepoint_t *cp;
+	trail_t *trail;
 	int failed;
 	int pc;
 	environ_t *env;
@@ -61,9 +67,10 @@ typedef struct choicepoint_t {
 	int retA;
 	struct choicepoint_t *lastcp;
 	int nextclause;
+	int trailptr;
 } choicepoint_t;
 
-choicepoint_t *cp_init(var_t **args, int retA);
+choicepoint_t *cp_init(var_t **args, int trailPtr, int retA);
 // byte code interpretation begins
 
 int create_variable(wam_t *wam, char *regname, char *varname);
@@ -94,4 +101,8 @@ int wam_consult(wam_t *wam, char *filename);
 
 int wam_run(wam_t *wam);
 int wam_run_query(wam_t *wam, char *query_str);
+
+trail_t *trail_init();
+int trail_add(trail_t *trail, var_t *var);
+int trail_undo(trail_t *trail, int index);
 #endif

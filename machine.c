@@ -53,7 +53,7 @@ int get_variable(wam_t *wam, char *regname1, char *regname2)
 	var_t *vn = wam_get_ref(wam, regname1);
 	var_t *Ai = wam_get_ref(wam, regname2);
 	var_copy(vn, Ai);
-	
+
 	wam->pc += 1;
 	return 0;
 }
@@ -62,6 +62,7 @@ int get_constant(wam_t *wam, char *constname, char *regname)
 	var_t *v = deref(wam_get_ref(wam, regname));
 	int failed = 1;
 	if (v->tag == REF) {
+		trail_add(wam->trail, v);
 		v->tag = CON;
 		strcpy(v->value, constname);
 		failed = 0;
@@ -91,11 +92,13 @@ int unify_variable2(wam_t *wam, var_t *v1, var_t *v2)
 	if (v1 == v2) return 1;
 
 	if (v1->tag == REF) {
+		trail_add(wam->trail, v1);
 		var_copy(v1, v2);
 		return 1;
 	}
 
 	if (v2->tag == REF) {
+		trail_add(wam->trail, v1);
 		var_copy(v2, v1);
 		return 1;
 	}
@@ -118,6 +121,7 @@ int unify_variable2(wam_t *wam, var_t *v1, var_t *v2)
 int unify_struc2(wam_t *wam, var_t *struc, var_t *head, var_t* tail)
 {
 	if (struc->tag == REF) {
+		trail_add(wam->trail, struc);
 		struc->tag = STR;
 		struc->head = head;
 		struc->tail = tail;
@@ -159,6 +163,7 @@ int unify_list(wam_t *wam, char *listname, char *headname, char *tailname) {
 	var_t *tail = wam_get_ref(wam, tailname);
 	int res = 0;
 	if (list->tag == REF) {
+		trail_add(wam->trail, list);
 		list->tag = LIS;
 		list->head = head;
 		list->tail = tail;
@@ -206,13 +211,13 @@ int put_variable(wam_t *wam, char *varname, char *argname)
 }
 int try_me_else(wam_t *wam, int next)
 {
-	choicepoint_t *cp = cp_init(wam->args, wam->ctnptr);
+	choicepoint_t *cp = cp_init(wam->args, wam->trail->n, wam->ctnptr);
 	cp->lastcp = wam->cp;
 	wam->cp = cp;
 	cp->nextclause = next;
 	cp->lastenv = wam->env;
 	wam->pc += 1;
-	return 0;	
+	return 0;
 }
 int proceed(wam_t *wam)
 {
@@ -261,18 +266,24 @@ int wam_backtrack(wam_t *wam)
 	printf("backtracking\n");
 	wam->bpcnt++;
 	wam->failed = 1;
+	int i;
 	if (wam->cp != NULL) {
 		wam->ctnptr = wam->cp->retA;
-		printf("1\n");
 		wam->pc = wam->cp->nextclause;
-		printf("%d\n", wam->pc);
 		wam->env = wam->cp->lastenv;
-		printf("2\n");
+
+		int tp = wam->cp->trailptr;
+		printf("trail->n = %d, tp = %d\n", wam->trail->n, tp);
+		for (i = wam->trail->n - 1; i >= tp; i--) {
+			trail_undo(wam->trail, i);
+		}
+		wam->trail->n = tp;
 		memcpy(wam->args, wam->cp->args, sizeof(wam->args));
-		printf("3\n");
 		wam->cp = wam->cp->lastcp;
 	} else {
-		printf("pc = -1\n");
+		for (i = wam->trail->n - 1; i >= 0; i--) {
+			trail_undo(wam->trail, i);
+		}
 		wam->pc = -1;
 	}
 	printf("backtracked\n");
@@ -439,21 +450,21 @@ environ_t *env_init(int retA, environ_t *lastenv)
 	return env;
 }
 
-choicepoint_t *cp_init(var_t *args[], int retA)
+choicepoint_t *cp_init(var_t *args[], int trailptr, int retA)
 {
 	int i;
 	choicepoint_t *cp = malloc(sizeof(choicepoint_t));
 	for (i = 0; i < MAX_VAR_CNT; i++) {
 		if (args[i] != NULL) {
-			cp->args[i] = malloc(sizeof(var_t));	
+			cp->args[i] = malloc(sizeof(var_t));
 			memcpy(cp->args[i], args[i], sizeof(var_t));
 			printf("copied A%d\n", i);
 		} else {
 			cp->args[i] = NULL;
 		}
 	}
-	printf("1\n");
 	cp->retA = retA;
+	cp->trailptr = trailptr;
 
 	return cp;
 }
@@ -463,6 +474,7 @@ int wam_reset(wam_t *wam) {
 	wam->nqvar = 0;
 	wam->env = env_init(99999999, NULL);
 	wam->cp = NULL;
+	wam->trail = trail_init();
 	return 0;
 }
 
@@ -536,6 +548,29 @@ int wam_run(wam_t *wam)
 		while (wam->cp != NULL) wam_backtrack(wam);
 		wam_backtrack(wam);
 	}
-	printf("unknown\n");
+	return 0;
+}
+
+trail_t *trail_init()
+{
+	trail_t *trail = malloc(sizeof(trail_t));
+	memset(trail, 0, sizeof(trail->contents));
+	trail->n = 0;
+	return trail;
+}
+int trail_add(trail_t *trail, var_t *var)
+{
+	trail->contents[trail->n] = var;
+	trail->n++;
+	return 0;
+}
+int trail_undo(trail_t *trail, int index)
+{
+	var_t *v = trail->contents[index];
+	if (v != NULL) {
+		v->tag = REF;
+		v->ref = v;
+	}
+
 	return 0;
 }
