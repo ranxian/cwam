@@ -6,6 +6,18 @@
 #include <assert.h>
 #include "helper.h"
 #define STREQL(s1, s2) (strcmp(s1, s2) == 0)
+
+static void print_var_list(var_t *list[])
+{
+	#ifdef DEBUG
+	int i;
+	for (i = 0; i < MAX_VAR_CNT; i++) {
+		var_t *var = list[i];
+		if (var != NULL)
+			printf("%d name: %s display: %d value: %s\n", i, var->name, var->display, var->value);
+	}
+	#endif
+}
 char *OP_NAMES(wam_op_t op)
 {
 	static char *names[] =
@@ -44,6 +56,7 @@ int create_variable(wam_t *wam, char *regname, char *varname)
 		assert(q == q->ref);
 		strcpy(q->name, varname);
 		q->display = 1;
+		print_var_list(wam->qvars);
 	}
 	wam->pc += 1;
 	return 0;
@@ -69,9 +82,6 @@ int get_constant(wam_t *wam, char *constname, char *regname)
 	} else if (v->tag == CON) {
 		if (strcmp(constname, v->value) == 0)
 			failed = 0;
-		else {
-			printf("%s != %s\n", constname, v->value);
-		}
 	}
 	if (failed)
 		wam_backtrack(wam);
@@ -98,7 +108,7 @@ int unify_variable2(wam_t *wam, var_t *v1, var_t *v2)
 	}
 
 	if (v2->tag == REF) {
-		trail_add(wam->trail, v1);
+		trail_add(wam->trail, v2);
 		var_copy(v2, v1);
 		return 1;
 	}
@@ -268,7 +278,9 @@ int wam_call(wam_t *wam, int target)
 
 int wam_backtrack(wam_t *wam)
 {
-	// printf("backtracking\n");
+	#ifdef DEBUG
+	printf("backtracking\n");
+	#endif
 	wam->bpcnt++;
 	wam->failed = 1;
 	int i;
@@ -290,7 +302,9 @@ int wam_backtrack(wam_t *wam)
 		}
 		wam->pc = -1;
 	}
-	// printf("backtracked\n");
+	#ifdef DEBUG
+	printf("backtracked\n");
+	#endif
 	return 0;
 }
 
@@ -300,7 +314,6 @@ int wam_intpred(wam_t *wam, int call)
 	int result = 1;
 	var_t *v = wam->args[0];
 	if (call == CALL_CALL) {
-		printf("call intpred call\n");
 		var_t *v2 = deref(v);
 		int target = -1;
 		if (v2->tag == CON) {
@@ -329,7 +342,6 @@ int wam_intpred(wam_t *wam, int call)
 		else
 			wam_backtrack(wam);
 	} else if (call == CALL_CONSULT) {
-		printf("call intpred consult.\n");
 		char info[MAX_WORD_LEN];
 		var_info(v, info);
 		wam_consult(wam, info);
@@ -344,13 +356,10 @@ int wam_consult(wam_t *wam, char *filename)
 	char fn2[256];
 	strcpy(fn2, filename+1);
 	fn2[strlen(fn2)-1] = 0;
-	printf("consulting %s\n", fn2);
 	prog_t *prog = compile_program(fn2);
-	printf("consulted\n");
 	if (prog == NULL)
 		wam_backtrack(wam);
 	else {
-		// prog_info(prog);
 		prog_add_prog(wam->prog, prog);
 		prog_update_label(wam->prog);
 		wam->pc += 1;
@@ -392,22 +401,21 @@ int wam_run_query(wam_t *wam, char *query_str)
 	prog_add_prog(wam->prog, prog);
 	prog_update_label(wam->prog);
 
-	prog_info(wam->prog);
-
 	wam->pc = prog_locate_label(wam->prog, "query$");
-	printf("PC: %d\n", wam->pc);
 
 	wam_run(wam);
 
 	if (wam->failed) {
-		printf("failed.\n");
+		printf("NO.\n");
 	} else {
-		printf("success.\n");
+		printf("YES.\n");
 		int i;
-		for (i = 0; i < wam->nqvar; i++) {
-			printf("%s=\n", wam->qvars[i]->name);
-			var_print(wam->qvars[i]);
-			printf("\n");
+		for (i = 0; i < MAX_VAR_CNT; i++) {
+			if (wam->qvars[i] != NULL) {
+				if (wam->qvars[i]->display) {
+					var_print(wam->qvars[i]);
+				}
+			}
 		}
 	}
 
@@ -500,8 +508,6 @@ int wam_run(wam_t *wam)
 
 		wam->failed = 0;
 		stmt_t *stmt = wam->prog->stmts[wam->pc];
-		printf("PC: %d, stmt: %s\n", wam->pc, stmt->label);
-		stmt_info(stmt);
 		if (wam->opcnt > wam->maxopcnt) {
 			printf("panic: maximum opcnt reached\n");
 			wam->failed = 1;

@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <assert.h>
 #include "helper.h"
-static char temp[256];
 
 var_t *var_init()
 {
@@ -11,6 +10,7 @@ var_t *var_init()
 	var->tag = REF;
 	var->ref = var;
 	var->display = 0;
+	var->name[0] = 0;
 
 	return var;
 }
@@ -45,7 +45,15 @@ var_t *var_init_as_bounded(char *name, var_t *v)
 
 int var_copy(var_t *dst, var_t *src)
 {
-	memcpy(dst, src, sizeof(var_t));
+	dst->tag = src->tag;
+	if (dst->tag == REF) {
+		dst->ref = src->ref;
+	} else if (dst->tag == CON) {
+		strcpy(dst->value, src->value);
+	} else {
+		dst->head = src->head;
+		dst->tail = src->tail;
+	}
 	return 0;
 }
 
@@ -66,33 +74,33 @@ void var_print(var_t *var)
 {
 	char t[64];
 	var_info(var, t);
-	printf("%s %s\n", var->name, t);
+	printf("%s = %s\n", var->name, t);
 	return;
 }
 
 void var_info2(var_t *var, char *res)
 {
 	if (var->tag == LIS) {
-		printf("%s\n", var->head->value);
 		var_info(var->head, res);
 		if (var->tail != NULL && var->tail->tag != CON) {
 			char t[MAX_WORD_LEN];
 			var_info2(var->tail, t);
-			sprintf(res, "%s, %s", res, t);
+			strcat(res, ", ");
+			strcat(res, t);
 		}
 	}
-	res[0] = 0;
 }
 
 void var_info(var_t *var, char *res)
 {
+	char temp[256] = {};
 	switch (var->tag) {
 		case CON:
 			strcpy(res, var->value);
 			break;
 		case LIS:
-			printf("%s: ", TAG_NAME(var->tag));
-			var_info2(var, res);
+			var_info2(var, temp);
+			sprintf(res, "[%s]", temp);
 			break;
 		case STR:
 		{
@@ -104,8 +112,12 @@ void var_info(var_t *var, char *res)
 			break;
 		}
 		case REF:
-			if (var->ref == var)
+			if (var->ref == var) {
 				strcpy(res, "_");
+				// var->tag = LIS;
+				// var_info2(var, temp);
+				// sprintf(res, "[%s]", temp);
+			}
 			else var_info(deref(var), res);
 			break;
 		default:

@@ -83,8 +83,6 @@ int kv_tbl_contains(kv_tbl_t *table, char *key)
 {
 	int i;
 	for (i = 0; i < table->len; i++) {
-			printf("%s\n", table->kvs[i].key);
-
 		if (strcmp(key, table->kvs[i].key) == 0)
 			return 1;
 	}

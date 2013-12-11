@@ -1,2 +1,2 @@
-consult('concat.pr').
-concat([a, b, c], [d, e], Remain).
+consult('replace.pr').
+replace([a, b, a, c, a, l], a, b, Remain).

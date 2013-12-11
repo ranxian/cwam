@@ -93,12 +93,10 @@ int prog_del_from_label(prog_t *prog, char *label)
 {
 	int line = prog_locate_label(prog, label);
 	int result = 0;
-	printf("delete %s at line %d\n", label, line);
 	if (line >= 0) {
 		result = prog_del_from_line(prog, line);
 		kv_tbl_remove(prog->labels, label);
 	}
-	printf("deleted\n");
 	return result;
 }
 
@@ -178,7 +176,9 @@ int prog_update_label(prog_t *prog)
 			if (kv_tbl_contains_whtpx(table, label)) {
 				stmt->jump = kv_tbl_lookup_whtpx(table, label)->intval;
 			} else {
+				#ifdef DEBUG
 				printf("table has no %s\n", label);
+				#endif
 				if (!strcmp(label, "call")) {
 					stmt->jump = CALL_CALL;
 				} else if (!strcmp(label, "consult")) {
@@ -187,6 +187,9 @@ int prog_update_label(prog_t *prog)
 					stmt->jump = CALL_RECONSULT;
 				} else if (!strcmp(label, "load")) {
 					stmt->jump = CALL_LOAD;
+				} else {
+					printf("fatal: can't find predicate with label %s\n", label);
+					return -1;
 				}
 			}
 		}

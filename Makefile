@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-DDEBUG
+CFLAGS=
 OBJS=compiler.o syntaxtree.o program_compiler.o stmt.o kv.o program.o \
 	 machine.o query_compiler.o variable.o helper.o
 

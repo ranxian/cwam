@@ -7,13 +7,11 @@
 
 static int preprocess_names(syn_node_t *root)
 {
-	printf("start processing names\n");
 
 	kv_tbl_t *table = kv_tbl_init();
-	int nkey = 0;
 
 	syn_node_t *prog_n, *pred_n;
-	int i, num;
+	int i;
 	if (root->type == S_PROGRAM && root->left != NULL) {
 		prog_n = root;
 		while (prog_n != NULL) {
@@ -48,9 +46,7 @@ static int preprocess_names(syn_node_t *root)
 			prog_n = prog_n->right;
 		}
 	}
-	syn_node_traverse(root);
 
-	printf("predicate node names updated\n");
 	kv_tbl_destroy(table);
 	return 0;
 }
@@ -62,7 +58,6 @@ static prog_t *compile(char *code)
 	syn_node_t *root = syn_node_init();
 	toks_t *toks = toks_init(code);
 	if (program(toks, root) && toks->idx == toks->len) {
-		printf("program compile success.\n");
 		preprocess_names(root);
 	}
 	toks_destroy(toks);
