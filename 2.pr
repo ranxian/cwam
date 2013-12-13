@@ -1,0 +1,3 @@
+father(sam, tim).
+mother(alice, sam).
+grandmother(X,Y) :- mother(X, Z), father(Z, Y).

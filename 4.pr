@@ -1,0 +1,4 @@
+delete(X, [], []).
+delete(H, [H|T], R) :- delete(H, T, R).
+delete(X, [H|T], [H|R]) :- delete(X, T, R).
+
