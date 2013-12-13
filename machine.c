@@ -303,6 +303,7 @@ int wam_backtrack(wam_t *wam)
 		wam->pc = -1;
 	}
 	#ifdef DEBUG
+	printf("%d\n", wam->pc);
 	printf("backtracked\n");
 	#endif
 	return 0;
@@ -409,20 +410,30 @@ int wam_run_query(wam_t *wam, char *query_str)
 
 	wam->pc = prog_locate_label(wam->prog, "query$");
 
-	wam_run(wam);
+	while (1) {
+		wam_run(wam);
 
-	if (wam->failed) {
-		printf("NO.\n");
-	} else {
-		printf("YES.\n");
-		int i;
-		for (i = 0; i < MAX_VAR_CNT; i++) {
-			if (wam->qvars[i] != NULL) {
-				if (wam->qvars[i]->display) {
-					var_print(wam->qvars[i]);
+		if (wam->failed) {
+			printf("NO.\n");
+		} else {
+			printf("YES.\n");
+			int i;
+			for (i = 0; i < MAX_VAR_CNT; i++) {
+				if (wam->qvars[i] != NULL) {
+					if (wam->qvars[i]->display) {
+						var_print(wam->qvars[i]);
+					}
 				}
 			}
 		}
+		if (wam->cp != NULL) {
+			char ans[MAX_WORD_LEN];
+			printf("more? [Y]es, [N]o\n");
+			scanf("%s", ans);
+			if (ans[0] == 'Y' || ans[0] == 'y') 
+				wam_backtrack(wam);
+			else break;
+		} else break;
 	}
 
 	wam_reset(wam);

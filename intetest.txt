@@ -1,2 +1,3 @@
-consult('replace.pr').
-replace([a, b, a, c, a, l], a, b, Remain).
+consult('test.pr').
+man(Who).
+yes

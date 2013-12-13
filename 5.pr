@@ -1,0 +1,3 @@
+concat([], L, L).
+concat([H|T], L, [H|M]) :- concat(T, L, M).
+
