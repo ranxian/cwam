@@ -388,10 +388,16 @@ int wam_run_query(wam_t *wam, char *query_str)
 	} else if (!strcmp(query_str, "list.")) {
 		prog_info(wam->prog);
 		return 1;
+	} else if (!strcmp(query_str, "reset.")) {
+		wam_reset(wam);
+		return 1;
 	} else if (!strcmp(query_str, "help.")) {
 		printf("sorry there is no help.\n");
 		return 1;
 	}
+
+	if (strlen(query_str) == 0)
+		return 1;
 
 	wam_reset(wam);
 	prog_del_from_label(wam->prog, "query$");
@@ -484,7 +490,7 @@ int wam_reset(wam_t *wam) {
 	int i;
 	for (i = 0; i < wam->narg; i++)
 		wam->args[i] = NULL;
-	for (i = 0; i < wam->nqvar; i++) 
+	for (i = 0; i < wam->nqvar; i++)
 		wam->qvars[i] = NULL;
 	wam->narg = 0;
 	wam->nqvar = 0;

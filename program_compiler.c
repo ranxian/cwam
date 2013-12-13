@@ -68,6 +68,10 @@ static prog_t *compile(char *code)
 prog_t *compile_program(char *filename)
 {
 	FILE *file = fopen(filename, "r");
+	if (file == NULL) {
+		printf("can't find or open file `%s'\n", filename);
+		return NULL;
+	}
 
 	char line[MAX_PROGRAM_LEN] = {};
 	char buf[MAX_LINE_LEN] = {};
