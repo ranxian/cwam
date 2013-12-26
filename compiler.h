@@ -30,12 +30,12 @@ int variable(toks_t *toks, syn_node_t *tree);
 int element(toks_t *toks, syn_node_t *tree);
 int query(toks_t *toks, syn_node_t *tree);
 
-toks_t *toks_init(const char *string);
-int token(toks_t *toks, const char *token);
-int is_token(toks_t *toks, const char *token);
-int toks_add_token(toks_t *toks, const char *token, int len);
-void toks_info(toks_t *toks);
-int toks_destroy(toks_t *toks);
+toks_t 	*toks_init(const char *string);
+int 	token(toks_t *toks, const char *token);
+int 	is_token(toks_t *toks, const char *token);
+int 	toks_add_token(toks_t *toks, const char *token, int len);
+void 	toks_info(toks_t *toks);
+int 	toks_destroy(toks_t *toks);
 
 int push_stat(toks_t *toks, syn_node_t *tree);
 int pop_stat(toks_t *toks, syn_node_t *tree, int old_idx);

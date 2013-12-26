@@ -6,6 +6,11 @@
 #define MAX_WORD_LEN 64
 #define MAX_PROGRAM_LEN 1024
 #define MAX_LABEL_NUM 256
+#define MAX_VAR_CNT 256
+#define MAX_KV_NUM 256
+#define MAX_STATEMENTS_NUM 1024
+#define MAX_LABEL_LEN 128
+#define MAX_VAL_LEN 256
 
 typedef enum wam_op_t {
 	OP_ALLOC,

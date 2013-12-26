@@ -1,6 +1,7 @@
 #ifndef SYNTAXTREE_H
 #define SYNTAXTREE_H
-#define MAX_VAL_LEN 256
+#include "defs.h"
+
 typedef enum { S_CLAUSE, S_PROGRAM, S_HEAD, S_BODY, S_PREDICATE, S_LIST, S_CONDITION,
 				S_VARIABLE, S_EXPR, S_ELEM, S_COMP, S_STRUCT, S_CONSTANT, S_NONE, S_CALL, S_NON_CALL, S_QUERY } syn_node_type_t;
 

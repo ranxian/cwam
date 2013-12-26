@@ -1,3 +1,0 @@
-consult('test.pr').
-man(Who).
-yes

@@ -1,6 +1,6 @@
 #ifndef KEY_VAL_H
 #define KEY_VAL_H
-#define MAX_KV_NUM 256
+#include "defs.h"
 typedef struct {
 	char key[256];
 	int intval;

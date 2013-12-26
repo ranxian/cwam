@@ -1,3 +1,0 @@
-human(sack).
-mortal(X) :-
-	human(X).

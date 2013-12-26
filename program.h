@@ -1,7 +1,6 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
-#define MAX_STATEMENTS_NUM 1024
-#define MAX_LABEL_LEN 128
+
 #include "stmt.h"
 #include "syntaxtree.h"
 #include "defs.h"

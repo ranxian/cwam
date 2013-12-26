@@ -2,7 +2,6 @@
 #define MACHINE_H
 #include "defs.h"
 #include "program.h"
-#define MAX_VAR_CNT 256
 
 char *OP_NAMES(wam_op_t op);
 

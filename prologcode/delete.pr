@@ -1,3 +1,0 @@
-delete2(X, [], []).
-delete2(H, [H|T], R) :- delete2(H, T, R).
-delete2(X, [H|T], [H|R]) :- delete2(X, T, R).
