@@ -10,4 +10,6 @@ int main()
 	prog = compile_query("member(a, [b, c, d, a, e]).");
 
 	prog_info(prog);
+
+	return 0;
 }

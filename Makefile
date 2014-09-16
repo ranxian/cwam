@@ -1,5 +1,5 @@
-CC=gcc
-CFLAGS=
+CC=clang
+CFLAGS=-Wall
 OBJS=compiler.o syntaxtree.o program_compiler.o stmt.o kv.o program.o \
 	 machine.o query_compiler.o variable.o helper.o
 

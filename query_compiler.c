@@ -5,7 +5,6 @@
 
 int query(toks_t *toks, syn_node_t *tree)
 {
-	int old_idx = toks->idx;
 	tree->left = malloc(sizeof(syn_node_t));
 	tree->right = malloc(sizeof(syn_node_t));
 	tree->type = S_QUERY;
@@ -32,7 +31,7 @@ prog_t *compile_query(char *query_str)
 	compiler_begin();
 	var_prefix = 'Q';
 	toks_t *toks = toks_init(query_str);
-	prog_t *prog;
+	prog_t *prog = NULL;
 	syn_node_t *root = syn_node_init();
 	if (query(toks, root)) {
 		if (toks->idx > toks->len) {

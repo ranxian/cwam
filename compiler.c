@@ -5,7 +5,7 @@
 #include "defs.h"
 #include "kv.h"
 #include "machine.h"
-#define is_anum(c) (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_')
+#define is_anum(c) ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')
 #define SEQL(s1, s2) (strcmp((s1), (s2)) == 0)
 #define is_comp(s) (SEQL((s), ">") || SEQL((s), "<") || SEQL((s), ">=") || SEQL((s), "<=") || \
 					SEQL((s), "!=") || SEQL((s), "=="))
@@ -337,8 +337,8 @@ toks_t *toks_init(const char *string)
 	toks->idx = 0;
 	toks->len = 0;
 
-	int i, len = strlen(string);
-	char temp[256], tlen = 0;
+	int i, len = strlen(string), tlen = 0;
+	char temp[256];
 
 	for (i = 0; i < len; i++)
 	{

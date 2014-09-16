@@ -13,7 +13,6 @@ int main(int argc, char *argv[])
 
 	char *constant = "foo";
 	char *var = "Bar";
-	char *num = "12.2";
 	printf("is_constant('%s'): %d\n", constant, is_constant(constant));
 	printf("is_constant('%s'): %d\n", var, is_constant(var));
 
@@ -44,4 +43,6 @@ int main(int argc, char *argv[])
 	toks_destroy(toks);
 	syn_node_destroy(root);
 	compiler_end();
+
+	return 0;
 }
