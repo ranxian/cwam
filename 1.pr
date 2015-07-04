@@ -1,1 +1,4 @@
-boy(tim).
+shabi(liuxiao).
+shabi(xianran).
+girl(liuxiao).
+nvshabi(X) :- shabi(X), girl(X).
