@@ -1,14 +1,21 @@
+# CWAM: Prolog interpreter based on Warren Abstract Machine in C
+
 This is a prolog interpreter written in C by Xian Ran (xianran@pku.edu.cn)
 
 Please compile and run this program on Unix.
 
-To compile: make clean && make
+## Compile
 
-Running cwam: there are 6 files in this directory, namely 1.pr to 6.pr, which are used to test prolog program. 
-Using 5.pr as an example, the result of running it will be following, the line starts with % is the output of the interpreter. 
-The purpose of 5.pr is to concat two lists.
+~~~
+make clean && make
+~~~
 
-```
+## Running
+
+There are 6 files in this directory, namely `1.pr` to `6.pr`, which are used to test prolog program. Using `5.pr` as an example, the result of running it will be following, the line starts with `%` is the output of the interpreter. 
+The purpose of `5.pr` is to concat two lists.
+
+~~~
 This is XR's prolog interpreter
 Type help to get help
 ?- consult('5.pr').
@@ -62,7 +69,8 @@ Y = []
 more? [Y]es, [N]o
 y
 NO.
-```
+~~~
 
-Note: This is a project of Peking University's Advanced Compiler Lab course, becuase of limited time it still needs to be refined.
+## Note
+This is a project of Peking University's Advanced Compiler Lab course, becuase of limited time it still needs to be refined.
  There may also be unfriendly warning and error messages. Please don't distribute any source code or executable without my awareness.
