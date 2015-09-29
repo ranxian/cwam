@@ -1,15 +1,14 @@
 This is a prolog interpreter written in C by Xian Ran (xianran@pku.edu.cn)
 
-请在 Unix 系统上编译和运行这个程序
+Please compile and run this program on Unix.
 
-依赖：gcc，make
+To compile: make clean && make
 
-编译：make clean && make
+Running cwam: there are 6 files in this directory, namely 1.pr to 6.pr, which are used to test prolog program. 
+Using 5.pr as an example, the result of running it will be following, the line starts with % is the output of the interpreter. 
+The purpose of 5.pr is to concat two lists.
 
-运行 cwam。在本目录下有 1.pr 到 6.pr 六个文件，分别是测试用的 prolog 程序。
-以程序 5.pr 为例，执行及执行的结果如下所示，其中 % 开始的行是解释器的输出。
-这个程序的目的是为了拼接两个列表。
-
+```
 This is XR's prolog interpreter
 Type help to get help
 ?- consult('5.pr').
@@ -63,6 +62,7 @@ Y = []
 more? [Y]es, [N]o
 y
 NO.
+```
 
-备注：这是北大编译实习实验班的作业，由于时间紧张，有一些细节尚待完善，如不友好的报错和
-错误处理机制等。请勿在我不知情的情况下传播任何代码、可执行文件。
+Note: This is a project of Peking University's Advanced Compiler Lab course, becuase of limited time it still needs to be refined.
+ There may also be unfriendly warning and error messages. Please don't distribute any source code or executable without my awareness.
