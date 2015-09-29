@@ -1,4 +1,4 @@
-# CWAM: Prolog interpreter based on Warren Abstract Machine in C
+# CWAM: Prolog Interpreter Based on Warren Abstract Machine in C
 
 This is a prolog interpreter written in C by Xian Ran (xianran@pku.edu.cn)
 
